@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TAF ENERGIES — Station Information & Audit Management System</title>
+  
+  <!-- Modern Typography (Inter & Outfit) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <meta name="theme-color" content="#0d1b2e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+
+  <!-- =========================================================================
+       APPLICATION HEADER & ACTION NAVIGATION
+       ========================================================================= -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-section">
+        <div class="brand-logo-badge">
+          <span>TAF</span>
+        </div>
+        <div class="brand-titles">
+          <div class="brand-title">
+            <span>TAF ENERGIES</span>
+            <span class="brand-tag">Audit Portal</span>
+          </div>
+          <span class="brand-subtitle">Addis Ababa Region — Station Information Checklist</span>
+        </div>
+      </div>
+
+      <!-- Live Compliance & Metrics Pill -->
+      <div class="header-stats">
+        <div class="stat-item">
+          <span class="stat-label">Compliance:</span>
+          <span class="stat-value score-high" id="headerStatScore">0%</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Issues:</span>
+          <span class="stat-value" id="headerStatIssues">0 Actions</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Photos:</span>
+          <span class="stat-value" id="headerStatPhotos">0 Attached</span>
+        </div>
+      </div>
+
+      <!-- Neon Database Live Connection Pill -->
+      <div class="neon-status-badge" id="neonStatusBadge" title="Connected to Neon Serverless PostgreSQL">
+        <span class="neon-pulse-dot"></span>
+        <span>Neon DB: Connected</span>
+      </div>
+
+      <!-- Action Buttons & Mode Switcher -->
+      <div class="header-actions">
+        <!-- 3-Way View Toggle -->
+        <div class="btn-toggle-view" title="Toggle between interactive form, official printable 2-page document, and admin records dashboard">
+          <button type="button" class="active" id="btnViewInteractive">
+            <span>📋 Audit Form</span>
+          </button>
+          <button type="button" id="btnViewDocument">
+            <span>📄 Official PDF</span>
+          </button>
+          <button type="button" id="btnViewAdmin">
+            <span>🛡️ Admin Panel (<span id="adminBadgeCount">0</span>)</span>
+          </button>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-sm" id="btnRegisterNeon" title="Save and register this audit into the Neon PostgreSQL database">
+          <span>🚀 Register to Neon</span>
+        </button>
+
+        <button type="button" class="btn btn-secondary btn-sm" id="btnPrintPdf" title="Print or save as official PDF">
+          <span>🖨️ Print PDF</span>
+        </button>
+
+        <button type="button" class="btn btn-secondary btn-sm" id="btnSaveAudit" title="Save current audit to local database">
+          <span>💾 Save</span>
+        </button>
+
+        <button type="button" class="btn btn-secondary btn-sm" id="btnHistoryToggle" title="View previously saved audits">
+          <span>📁 History</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       MAIN CONTENT WORKSPACE
+       ========================================================================= -->
+  <main class="main-wrapper">
+
+    <!-- =======================================================================
+         VIEW 1: INTERACTIVE AUDIT WORKSPACE (MOBILE & FIELD AUDITOR FRIENDLY)
+         ======================================================================= -->
+    <div class="view-container active" id="interactiveView">
+
+      <!-- Top Toolbar -->
+      <div class="audit-toolbar">
+        <div class="audit-meta-quick">
+          <div class="quick-chip">
+            <span>Region:</span>
+            <strong>Addis Ababa Region</strong>
+          </div>
+          <div class="quick-chip">
+            <span>Document:</span>
+            <strong>Internal Audit Checklist</strong>
+          </div>
+          <div class="quick-chip" id="stationQuickIndicator">
+            <span>Station:</span>
+            <strong id="quickStationText">New Inspection</strong>
+          </div>
+        </div>
+
+        <div class="toolbar-buttons">
+          <button type="button" class="btn btn-secondary btn-sm" id="btnResetAudit">
+            <span>🔄 Clear Form</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Real-time Audit Progress & Score Gauge -->
+      <div class="audit-progress-card">
+        <div class="progress-circular">
+          <svg viewBox="0 0 80 80">
+            <circle class="circle-bg" cx="40" cy="40" r="35"></circle>
+            <circle class="circle-fill" id="progressCircleFill" cx="40" cy="40" r="35"></circle>
+          </svg>
+          <div class="progress-score-text" id="progressScoreText">92%</div>
+        </div>
+        <div class="progress-details">
+          <h3>Station Audit Operational Health</h3>
+          <p>Real-time compliance rating calculated across canopy signage, dispensers, safety, and inventory.</p>
+          <div class="progress-pills">
+            <span class="pill-badge pill-pass" id="pillPassCount">✓ 11 Passed</span>
+            <span class="pill-badge pill-fail" id="pillFailCount">⚠ 1 Deficiency</span>
+            <span class="pill-badge pill-pending" id="pillPhotosCount">📷 3 Photos</span>
+          </div>
+        </div>
+        <div class="progress-actions">
+          <button type="button" class="btn btn-primary" onclick="switchView('document')">
+            <span>Preview Official Document ➔</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Station Metadata Header Card -->
+      <div class="station-meta-card">
+        <div class="meta-header">
+          <h2>
+            <span style="color: var(--accent-gold);">●</span>
+            Station Information & Audit Parameters
+          </h2>
+          <span style="font-size: 0.78rem; color: var(--text-muted);">Matches Official Header Fields</span>
+        </div>
+        <div class="meta-grid">
+          <div class="form-group">
+            <label for="inputStationName">Station Name / Location</label>
+            <input type="text" class="form-input" id="inputStationName" placeholder="e.g. Bole Medhanialem Station / Bole Road">
+          </div>
+          <div class="form-group">
+            <label for="inputCanopyId">Station Number (Canopy ID)</label>
+            <input type="text" class="form-input" id="inputCanopyId" placeholder="e.g. ET-ADD-CNP-042">
+          </div>
+          <div class="form-group">
+            <label for="inputDate">Inspection Date</label>
+            <input type="date" class="form-input" id="inputDate">
+          </div>
+          <div class="form-group">
+            <label for="inputAuditorName">Lead Auditor Name</label>
+            <input type="text" class="form-input" id="inputAuditorName" placeholder="e.g. Dawit Bekele">
+          </div>
+          <div class="form-group">
+            <label for="inputManagerName">Station Supervisor / Manager</label>
+            <input type="text" class="form-input" id="inputManagerName" placeholder="e.g. Solomon Tadesse">
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 1: CANOPY, LIGHTING & EXTERIOR SIGNAGE -->
+      <section class="audit-section">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <div class="section-accent-bar"></div>
+            <h3 class="section-title">1. CANOPY, LIGHTING & EXTERIOR SIGNAGE</h3>
+          </div>
+          <span class="section-stats-chip">3 Inspection Items</span>
+        </div>
+
+        <div class="checklist-items-list">
+          <!-- Item 1.1 -->
+          <div class="audit-item-row">
+            <div class="item-info">
+              <span class="item-name">Canopy Station Number & TAF Logo</span>
+              <p class="item-desc">Verify station number and TAF logo typography/color match corporate brand standards.</p>
+              
+              <!-- Photo Upload & Thumbnails -->
+              <div class="item-photos-container">
+                <input type="file" id="file_canopyLogo" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'canopyLogo', 'Canopy Station Number & TAF Logo')">
+                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_canopyLogo').click()">
+                  <span>📷 Upload / Take Photo</span>
+                </button>
+                <div class="photo-thumbnails-tray" id="photos_tray_canopyLogo"></div>
+              </div>
+            </div>
+            <div class="item-actions">
+              <div class="options-group" id="options_canopyLogo"></div>
+            </div>
+          </div>
+
+          <!-- Item 1.2 -->
+          <div class="audit-item-row">
+            <div class="item-info">
+              <span class="item-name">Canopy & Area Lighting</span>
+              <p class="item-desc">Check if all under-canopy and security lights are working. Note any dead bulbs.</p>
+              
+              <div class="item-photos-container">
+                <input type="file" id="file_lighting" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'lighting', 'Canopy & Area Lighting')">
+                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_lighting').click()">
+                  <span>📷 Upload / Take Photo</span>
+                </button>
+                <div class="photo-thumbnails-tray" id="photos_tray_lighting"></div>
+              </div>
+            </div>
+            <div class="item-actions">
+              <div class="options-group" id="options_lighting"></div>
+            </div>
+          </div>
+
+          <!-- Item 1.3 -->
+          <div class="audit-item-row">
+            <div class="item-info">
+              <span class="item-name">Prime Sign / Pylon Sign</span>
+              <p class="item-desc">Main highway identification sign present and illuminated correctly.</p>
+              
+              <div class="item-photos-container">
+                <input type="file" id="file_pylonSign" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'pylonSign', 'Prime Sign / Pylon Sign')">
+                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_pylonSign').click()">
+                  <span>📷 Upload / Take Photo</span>
+                </button>
+                <div class="photo-thumbnails-tray" id="photos_tray_pylonSign"></div>
+              </div>
+            </div>
+            <div class="item-actions">
+              <div class="options-group" id="options_pylonSign"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2: FORECOURT & DISPENSERS -->
+      <section class="audit-section">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <div class="section-accent-bar"></div>
+            <h3 class="section-title">2. FORECOURT & DISPENSERS</h3>
+          </div>
+          <span class="section-stats-chip">2 Inspection Items</span>
+        </div>
+
+        <div class="checklist-items-list">
+          <!-- Item 2.1 -->
+          <div class="audit-item-row">
+            <div class="item-info">
+              <span class="item-name">Dispenser Operational Status</span>
+              <p class="item-desc">Check all pumps. Record total working vs out-of-service dispensers.</p>
+              
+              <div class="item-photos-container">
+                <input type="file" id="file_dispenserOperational" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'dispenserOperational', 'Dispenser Operational Status')">
+                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_dispenserOperational').click()">
+                  <span>📷 Upload / Take Photo</span>
+                </button>
+                <div class="photo-thumbnails-tray" id="photos_tray_dispenserOperational"></div>
+              </div>
+            </div>
+            <div class="item-actions">
+              <div class="dispenser-counts-group">
+                <div class="count-field">
+                  <label for="inputDispensersWorking">Working:</label>
+                  <div class="stepper-wrap">
+                    <button type="button" class="btn-stepper" onclick="stepCount('Working', -1)">−</button>
+                    <input type="number" id="inputDispensersWorking" class="count-input" min="0" max="60" value="0">
+                    <button type="button" class="btn-stepper" onclick="stepCount('Working', 1)">+</button>
+                  </div>
+                </div>
+                <div class="count-field">
+                  <label for="inputDispensersBroken">Broken:</label>
+                  <div class="stepper-wrap">
+                    <button type="button" class="btn-stepper" onclick="stepCount('Broken', -1)">−</button>
+                    <input type="number" id="inputDispensersBroken" class="count-input" min="0" max="60" value="0">
+                    <button type="button" class="btn-stepper" onclick="stepCount('Broken', 1)">+</button>
+                  </div>
+                </div>
+                <span class="count-badge-ratio" id="dispenserRatioBadge">0 Pumps Recorded</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Item 2.2 -->
+          <div class="audit-item-row">
+            <div class="item-info">
+              <span class="item-name">Nozzles, Hoses & Breakaways</span>
+              <p class="item-desc">Hoses unfrayed, nozzles shutting off correctly, safety breakaways intact.</p>
+              
+              <div class="item-photos-container">
+                <input type="file" id="file_nozzlesBreakaways" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'nozzlesBreakaways', 'Nozzles, Hoses & Breakaways')">
+                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_nozzlesBreakaways').click()">
+                  <span>📷 Upload / Take Photo</span>
+                </button>
+                <div class="photo-thumbnails-tray" id="photos_tray_nozzlesBreakaways"></div>
+              </div>
+            </div>
+            <div class="item-actions">
+              <div class="options-group" id="options_nozzlesBreakaways"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3: LUBRICANTS & RETAIL SHOP -->
+      <section class="audit-section">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <div class="section-accent-bar"></div>
+            <h3 class="section-title">3. LUBRICANTS & RETAIL SHOP</h3>
+          </div>
+          <span class="section-stats-chip">2 Inspection Items</span>
+        </div>
+
+        <div class="checklist-items-list">
+          <!-- Item 3.1 -->
+          <div class="audit-item-row">
+            <div class="item-info">
+              <span class="item-name">Lubricant Display Shelf</span>
+              <p class="item-desc">Display shelf present in station shop/kiosk? Clean, organized, and structured.</p>
+              
+              <div class="item-photos-container">
+                <input type="file" id="file_lubricantShelf" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'lubricantShelf', 'Lubricant Display Shelf')">
+                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_lubricantShelf').click()">
+                  <span>📷 Upload / Take Photo</span>
+                </button>
+                <div class="photo-thumbnails-tray" id="photos_tray_lubricantShelf"></div>
+              </div>
+            </div>
+            <div class="item-actions">
+              <div class="options-group" id="options_lubricantShelf"></div>
+            </div>
+          </div>
+
+          <!-- Item 3.2 -->
+          <div class="audit-item-row">
+            <div class="item-info">
+              <span class="item-name">Lubricant Products Stock</span>
+              <p class="item-desc">Sufficient variety of engine oils & fluids? Genuine TAF / approved stock?</p>
+              
+              <div class="item-photos-container">
+                <input type="file" id="file_lubricantStock" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'lubricantStock', 'Lubricant Products Stock')">
+                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_lubricantStock').click()">
+                  <span>📷 Upload / Take Photo</span>
+                </button>
+                <div class="photo-thumbnails-tray" id="photos_tray_lubricantStock"></div>
+              </div>
+            </div>
+            <div class="item-actions">
+              <div class="options-group" id="options_lubricantStock"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4: ANCILLARY SERVICES & FACILITIES -->
+      <section class="audit-section">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <div class="section-accent-bar"></div>
+            <h3 class="section-title">4. ANCILLARY SERVICES & FACILITIES</h3>
+          </div>
+          <span class="section-stats-chip">2 Inspection Items</span>
+        </div>
+
+        <div class="checklist-items-list">
+          <!-- Item 4.1 -->
+          <div class="audit-item-row">
+            <div class="item-info">
+              <span class="item-name">Car Wash Facility</span>
+              <p class="item-desc">Car wash present on site? Is branding correct and visible?</p>
+              
+              <div class="item-photos-container">
+                <input type="file" id="file_carWash" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'carWash', 'Car Wash Facility')">
+                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_carWash').click()">
+                  <span>📷 Upload / Take Photo</span>
+                </button>
+                <div class="photo-thumbnails-tray" id="photos_tray_carWash"></div>
+              </div>
+            </div>
+            <div class="item-actions">
+              <div class="options-group" id="options_carWash"></div>
+            </div>
+          </div>
+
+          <!-- Item 4.2 -->
+          <div class="audit-item-row">
+            <div class="item-info">
+              <span class="item-name">Generator & Backup Power</span>
+              <p class="item-desc">Emergency generator present and operational during grid failure.</p>
+              
+              <div class="item-photos-container">
+                <input type="file" id="file_generator" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'generator', 'Generator & Backup Power')">
+                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_generator').click()">
+                  <span>📷 Upload / Take Photo</span>
+                </button>
+                <div class="photo-thumbnails-tray" id="photos_tray_generator"></div>
+              </div>
+            </div>
+            <div class="item-actions">
+              <div class="options-group" id="options_generator"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 5: SAFETY & OPERATIONAL COMPLIANCE -->
+      <section class="audit-section">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <div class="section-accent-bar"></div>
+            <h3 class="section-title">5. SAFETY & OPERATIONAL COMPLIANCE</h3>
+          </div>
+          <span class="section-stats-chip">2 Inspection Items</span>
+        </div>
+
+        <div class="checklist-items-list">
+          <!-- Item 5.1 -->
+          <div class="audit-item-row">
+            <div class="item-info">
+              <span class="item-name">Fire Extinguishers & Sand Buckets</span>
+              <p class="item-desc">Clearly visible, fully charged, within inspection date, accessible.</p>
+              
+              <div class="item-photos-container">
+                <input type="file" id="file_fireExtinguishers" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'fireExtinguishers', 'Fire Extinguishers & Sand Buckets')">
+                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_fireExtinguishers').click()">
+                  <span>📷 Upload / Take Photo</span>
+                </button>
+                <div class="photo-thumbnails-tray" id="photos_tray_fireExtinguishers"></div>
+              </div>
+            </div>
+            <div class="item-actions">
+              <div class="options-group" id="options_fireExtinguishers"></div>
+            </div>
+          </div>
+
+          <!-- Item 5.2 -->
+          <div class="audit-item-row">
+            <div class="item-info">
+              <span class="item-name">Staff Uniform & Presentation</span>
+              <p class="item-desc">Attendants wearing standard TAF branded uniforms and PPE.</p>
+              
+              <div class="item-photos-container">
+                <input type="file" id="file_staffUniform" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'staffUniform', 'Staff Uniform & Presentation')">
+                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_staffUniform').click()">
+                  <span>📷 Upload / Take Photo</span>
+                </button>
+                <div class="photo-thumbnails-tray" id="photos_tray_staffUniform"></div>
+              </div>
+            </div>
+            <div class="item-actions">
+              <div class="options-group" id="options_staffUniform"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 6: CORRECTIVE ACTIONS & GENERAL NOTES -->
+      <section class="audit-section">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <div class="section-accent-bar"></div>
+            <h3 class="section-title">6. CORRECTIVE ACTIONS & GENERAL NOTES</h3>
+          </div>
+          <span class="section-stats-chip">Audit Findings & Follow-up</span>
+        </div>
+
+        <div class="corrective-notes-box">
+          <p class="corrective-intro">Record urgent repairs, safety violations, or branding discrepancies requiring immediate attention:</p>
+          
+          <div class="corrective-items-container" id="correctiveActionsList">
+            <!-- Dynamic Action Items -->
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; margin-top: 1rem; align-items: center; flex-wrap: wrap;">
+            <button type="button" class="btn btn-secondary btn-sm" id="btnAddCorrectiveAction">
+              <span>➕ Add Corrective Action Item</span>
+            </button>
+
+            <!-- General Photo upload for corrective actions -->
+            <input type="file" id="file_correctiveGeneral" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'correctiveGeneral', 'Section 6 General Issue')">
+            <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_correctiveGeneral').click()">
+              <span>📷 Attach Evidence Photo to Notes</span>
+            </button>
+            <div class="photo-thumbnails-tray" id="photos_tray_correctiveGeneral"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SIGN-OFF & DIGITAL SIGNATURES -->
+      <section class="audit-section">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <div class="section-accent-bar"></div>
+            <h3 class="section-title">AUDIT ASSURANCE & SIGN-OFF</h3>
+          </div>
+          <span class="section-stats-chip">Legal Attestation</span>
+        </div>
+
+        <div class="signatures-grid">
+          <!-- Auditor Signature -->
+          <div class="signature-box">
+            <h4>Auditor Attestation & Signature</h4>
+            <div class="canvas-signature-wrap">
+              <canvas id="sigCanvasAuditor"></canvas>
+              <span class="canvas-placeholder-text">Draw Auditor Signature Here</span>
+            </div>
+            <div class="sig-actions">
+              <span style="font-size: 0.75rem; color: var(--text-muted);">Lead Internal Auditor</span>
+              <button type="button" class="btn btn-secondary btn-sm" id="btnClearSigAuditor">Clear</button>
+            </div>
+          </div>
+
+          <!-- Station Manager Signature -->
+          <div class="signature-box">
+            <h4>Station Manager Acknowledgement</h4>
+            <div class="canvas-signature-wrap">
+              <canvas id="sigCanvasManager"></canvas>
+              <span class="canvas-placeholder-text">Draw Manager Signature Here</span>
+            </div>
+            <div class="sig-actions">
+              <span style="font-size: 0.75rem; color: var(--text-muted);">Station Supervisor on Duty</span>
+              <button type="button" class="btn btn-secondary btn-sm" id="btnClearSigManager">Clear</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- =======================================================================
+         VIEW 2: OFFICIAL DOCUMENT PRINT / PDF VIEW (EXACT 2-PAGE TWIN)
+         ======================================================================= -->
+    <div class="view-container" id="documentView">
+
+      <div class="document-view-container">
+
+        <!-- ==================== DOCUMENT PAGE 1 ==================== -->
+        <article class="doc-sheet" id="docSheetPage1">
+          <!-- Top Navy Header Banner -->
+          <header class="doc-header-banner">
+            <h1 class="doc-brand-name">TAF ENERGIES</h1>
+            <p class="doc-brand-subtitle">Addis Ababa Region — Station Information Checklist</p>
+          </header>
+
+          <!-- Station Metadata Row -->
+          <div class="doc-meta-row">
+            <div class="doc-meta-col">
+              <span class="doc-meta-label">STATION NAME / LOCATION</span>
+              <span class="doc-meta-value" id="docStationName">Bole Medhanialem Station, Addis Ababa</span>
+            </div>
+            <div class="doc-meta-col">
+              <span class="doc-meta-label">STATION NUMBER (CANOPY ID)</span>
+              <span class="doc-meta-value" id="docCanopyId">ET-ADD-CNP-042</span>
+            </div>
+            <div class="doc-meta-col">
+              <span class="doc-meta-label">DATE</span>
+              <span class="doc-meta-value" id="docDate">2026-10-03</span>
+            </div>
+          </div>
+
+          <!-- SECTION 1 -->
+          <section class="doc-section">
+            <div class="doc-section-header">
+              <div class="doc-orange-bar"></div>
+              <h2 class="doc-section-title">1. CANOPY, LIGHTING & EXTERIOR SIGNAGE</h2>
+            </div>
+            <div class="doc-card-box">
+              <!-- Item 1.1 -->
+              <div class="doc-row">
+                <div class="doc-row-content">
+                  <div class="doc-item-title">Canopy Station Number & TAF Logo</div>
+                  <div class="doc-item-desc">Verify station number and TAF logo typography/color match corporate brand standards.</div>
+                </div>
+                <div class="doc-options-display">
+                  <span class="doc-checkbox-item">
+                    <span class="doc-box" id="docBox_canopyPass">[ ]</span> Pass
+                  </span>
+                  <span class="doc-checkbox-item">
+                    <span class="doc-box" id="docBox_canopyFail">[ ]</span> Fail
+                  </span>
+                </div>
+              </div>
+
+              <div class="doc-divider-dashed"></div>
+
+              <!-- Item 1.2 -->
+              <div class="doc-row">
+                <div class="doc-row-content">
+                  <div class="doc-item-title">Canopy & Area Lighting</div>
+                  <div class="doc-item-desc">Check if all under-canopy and security lights are working. Note any dead bulbs.</div>
+                </div>
+                <div class="doc-options-display">
+                  <span class="doc-checkbox-item">
+                    <span class="doc-box" id="docBox_lightWork">[ ]</span> Working
+                  </span>
+                  <span class="doc-checkbox-item">
+                    <span class="doc-box" id="docBox_lightFault">[ ]</span> Faulty
+                  </span>
+                </div>
+              </div>
+
+              <div class="doc-divider-dashed"></div>
+
+              <!-- Item 1.3 -->
+              <div class="doc-row">
+                <div class="doc-row-content">
+                  <div class="doc-item-title">Prime Sign / Pylon Sign</div>
+                  <div class="doc-item-desc">Main highway identification sign present and illuminated correctly.</div>
+                </div>
+                <div class="doc-options-display">
+                  <span class="doc-checkbox-item">
+                    <span class="doc-box" id="docBox_pylonYes">[ ]</span> Yes / Working
+                  </span>
+                  <span class="doc-checkbox-item">
+                    <span class="doc-box" id="docBox_pylonNo">[ ]</span> No / Faulty
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- SECTION 2 -->
+          <section class="doc-section">
+            <div class="doc-section-header">
+              <div class="doc-orange-bar"></div>
+              <h2 class="doc-section-title">2. FORECOURT & DISPENSERS</h2>
+            </div>
+            <div class="doc-card-box">
+              <!-- Item 2.1 -->
+              <div class="doc-row">
+                <div class="doc-row-content">
+                  <div class="doc-item-title">Dispenser Operational Status</div>
+                  <div class="doc-item-desc">Check all pumps. Record total working vs out-of-service dispensers.</div>
+                </div>
+                <div class="doc-dispenser-status-text">
+                  Working: <span class="doc-dispenser-line" id="docDispensersWorking">6</span>
+                  Broken: <span class="doc-dispenser-line" id="docDispensersBroken">1</span>
+                </div>
+              </div>
+
+              <div class="doc-divider-dashed"></div>
+
+              <!-- Item 2.2 -->
+              <div class="doc-row">
+                <div class="doc-row-content">
+                  <div class="doc-item-title">Nozzles, Hoses & Breakaways</div>
+                  <div class="doc-item-desc">Hoses unfrayed, nozzles shutting off correctly, safety breakaways intact.</div>
+                </div>
+                <div class="doc-options-display">
+                  <span class="doc-checkbox-item">
+                    <span class="doc-box" id="docBox_nozzleGood">[ ]</span> Good
+                  </span>
+                  <span class="doc-checkbox-item">
+                    <span class="doc-box" id="docBox_nozzleAction">[ ]</span> Action Req.
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Document Page 1 Footer -->
+          <footer class="doc-footer">
+            <span>TAF Energies — Internal Audit Document</span>
+            <span>Page 1 of 2</span>
+          </footer>
+        </article>
+
+        <!-- ==================== DOCUMENT PAGE 2 ==================== -->
+        <article class="doc-sheet" id="docSheetPage2">
+          <!-- SECTION 3 -->
+          <section class="doc-section">
+            <div class="doc-section-header">
+              <div class="doc-orange-bar"></div>
+              <h2 class="doc-section-title">3. LUBRICANTS & RETAIL SHOP</h2>
+            </div>
+            <div class="doc-card-box">
+              <!-- Item 3.1 -->
+              <div class="doc-row">
+                <div class="doc-row-content">
+                  <div class="doc-item-title">Lubricant Display Shelf</div>
+                  <div class="doc-item-desc">Display shelf present in station shop/kiosk? Clean, organized, and structured.</div>
+                </div>
+                <div class="doc-options-display">
+                  <span class="doc-checkbox-item">
+                    <span class="doc-box" id="docBox_shelfYes">[ ]</span> Yes
+                  </span>
+                  <span class="doc-checkbox-item">
+                    <span class="doc-box" id="docBox_shelfNo">[ ]</span> No Shelf
+                  </span>
+                </div>
+              </div>
+
+              <div class="doc-divider-dashed"></div>
+
+              <!-- Item 3.2 -->
+              <div class="doc-row">
+                <div class="doc-row-content">
+                  <div class="doc-item-title">Lubricant Products Stock</div>
+                  <div class="doc-item-desc">Sufficient variety of engine oils & fluids? Genuine TAF / approved stock?</div>
+                </div>
+                <div class="doc-options-display">
+                  <span class="doc-checkbox-item">
+                    <span class="doc-box" id="docBox_stockAdequate">[ ]</span> Adequate
+                  </span>
+                  <span class="doc-checkbox-item">
+                    <span class="doc-box" id="docBox_stockLow">[ ]</span> Low / None
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- SECTION 4 -->
+          <section class="doc-section">
+            <div class="doc-section-header">
+              <div class="doc-orange-bar"></div>
+              <h2 class="doc-section-title">4. ANCILLARY SERVICES & FACILITIES</h2>
+            </div>
+            <div class="doc-card-box">
+              <!-- Item 4.1 -->
+              <div class="doc-row">
+                <div class="doc-row-content">
+                  <div class="doc-item-title">Car Wash Facility</div>
+                  <div class="doc-item-desc">Car wash present on site? Is branding correct and visible?</div>
+                </div>
+                <div class="doc-options-display">
+                  <span class="doc-checkbox-item">
+                    <span class="doc-box" id="docBox_carwashBranded">[ ]</span> Branded
+                  </span>
+                  <span class="doc-checkbox-item">
+                    <span class="doc-box" id="docBox_carwashUnbranded">[ ]</span> Unbranded
+                  </span>
+                  <span class="doc-checkbox-item">
+                    <span class="doc-box" id="docBox_carwashNone">[ ]</span> None
+                  </span>
+                </div>
+              </div>
+
+              <div class="doc-divider-dashed"></div>
+
+              <!-- Item 4.2 -->
+              <div class="doc-row">
+                <div class="doc-row-content">
+                  <div class="doc-item-title">Generator & Backup Power</div>
+                  <div class="doc-item-desc">Emergency generator present and operational during grid failure.</div>
+                </div>
+                <div class="doc-options-display">
+                  <span class="doc-checkbox-item">
+                    <span class="doc-box" id="docBox_genOper">[ ]</span> Operational
+                  </span>
+                  <span class="doc-checkbox-item">
+                    <span class="doc-box" id="docBox_genNon">[ ]</span> Non-Functional
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- SECTION 5 -->
+          <section class="doc-section">
+            <div class="doc-section-header">
+              <div class="doc-orange-bar"></div>
+              <h2 class="doc-section-title">5. SAFETY & OPERATIONAL COMPLIANCE</h2>
+            </div>
+            <div class="doc-card-box">
+              <!-- Item 5.1 -->
+              <div class="doc-row">
+                <div class="doc-row-content">
+                  <div class="doc-item-title">Fire Extinguishers & Sand Buckets</div>
+                  <div class="doc-item-desc">Clearly visible, fully charged, within inspection date, accessible.</div>
+                </div>
+                <div class="doc-options-display">
+                  <span class="doc-checkbox-item">
+                    <span class="doc-box" id="docBox_fireCompliant">[ ]</span> Compliant
+                  </span>
+                  <span class="doc-checkbox-item">
+                    <span class="doc-box" id="docBox_fireDeficient">[ ]</span> Deficient
+                  </span>
+                </div>
+              </div>
+
+              <div class="doc-divider-dashed"></div>
+
+              <!-- Item 5.2 -->
+              <div class="doc-row">
+                <div class="doc-row-content">
+                  <div class="doc-item-title">Staff Uniform & Presentation</div>
+                  <div class="doc-item-desc">Attendants wearing standard TAF branded uniforms and PPE.</div>
+                </div>
+                <div class="doc-options-display">
+                  <span class="doc-checkbox-item">
+                    <span class="doc-box" id="docBox_uniformGood">[ ]</span> Good
+                  </span>
+                  <span class="doc-checkbox-item">
+                    <span class="doc-box" id="docBox_uniformPoor">[ ]</span> Poor
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- SECTION 6 -->
+          <section class="doc-section">
+            <div class="doc-section-header">
+              <div class="doc-orange-bar"></div>
+              <h2 class="doc-section-title">6. CORRECTIVE ACTIONS & GENERAL NOTES</h2>
+            </div>
+            <div class="doc-notes-card">
+              <div class="doc-notes-instruction">Record urgent repairs, safety violations, or branding discrepancies requiring immediate attention:</div>
+              <div class="doc-note-line">
+                <span class="doc-note-number">1.</span>
+                <span class="doc-note-text" id="docNote1"></span>
+              </div>
+              <div class="doc-note-line">
+                <span class="doc-note-number">2.</span>
+                <span class="doc-note-text" id="docNote2"></span>
+              </div>
+              <div id="docNoteExtraContainer"></div>
+            </div>
+          </section>
+
+          <!-- Signatures & Verification Block -->
+          <div class="doc-signoff-row">
+            <div class="doc-signoff-col">
+              <span class="doc-meta-label">LEAD AUDITOR SIGNATURE & ATTESTATION</span>
+              <div class="doc-sig-preview" id="docSigAuditor"></div>
+              <span style="font-size: 11px; font-weight: 600;" id="docAuditorNameText">Dawit Bekele</span>
+            </div>
+            <div class="doc-signoff-col">
+              <span class="doc-meta-label">STATION MANAGER / SUPERVISOR SIGNATURE</span>
+              <div class="doc-sig-preview" id="docSigManager"></div>
+              <span style="font-size: 11px; font-weight: 600;" id="docManagerNameText">Solomon Tadesse</span>
+            </div>
+          </div>
+
+          <!-- Document Page 2 Footer -->
+          <footer class="doc-footer">
+            <span>TAF Energies — Internal Audit Document</span>
+            <span>Page 2 of 2</span>
+          </footer>
+        </article>
+
+        <!-- ==================== DOCUMENT PAGE 3 (PHOTO EVIDENCE ANNEX) ==================== -->
+        <article class="doc-sheet" id="docSheetAnnex">
+          <!-- Top Navy Header Banner -->
+          <header class="doc-header-banner" style="margin-bottom: 16px;">
+            <h1 class="doc-brand-name" style="font-size: 22px;">TAF ENERGIES</h1>
+            <p class="doc-brand-subtitle">Field Audit Photographic Evidence & Equipment Verification Annex</p>
+          </header>
+
+          <!-- Station Metadata Row -->
+          <div class="doc-meta-row" style="margin-bottom: 18px; padding-bottom: 8px;">
+            <div class="doc-meta-col">
+              <span class="doc-meta-label">STATION NAME / LOCATION</span>
+              <span class="doc-meta-value" id="annexStationName">—</span>
+            </div>
+            <div class="doc-meta-col">
+              <span class="doc-meta-label">STATION NUMBER (CANOPY ID)</span>
+              <span class="doc-meta-value" id="annexCanopyId">—</span>
+            </div>
+            <div class="doc-meta-col">
+              <span class="doc-meta-label">INSPECTION DATE</span>
+              <span class="doc-meta-value" id="annexDate">—</span>
+            </div>
+          </div>
+
+          <div class="doc-annex-grid" id="docAnnexGrid">
+            <!-- Dynamically populated from live camera captures & uploaded field photos -->
+          </div>
+
+          <footer class="doc-footer" style="margin-top: auto; padding-top: 16px;">
+            <span>TAF Energies — Internal Audit Document</span>
+            <span>Page 3 of 3 (Photo Evidence Annex)</span>
+          </footer>
+        </article>
+
+      </div>
+    </div>
+
+    <!-- =======================================================================
+         VIEW 3: ADMIN PANEL & REGISTERED RECORDS (NEON DATABASE POWERED)
+         ======================================================================= -->
+    <div class="view-container" id="adminView">
+
+      <!-- Admin Hero Banner -->
+      <div class="admin-hero-banner">
+        <div class="admin-hero-content">
+          <h2>
+            <span style="color: var(--accent-gold);">🛡️</span>
+            Audit Management & Enterprise Records
+          </h2>
+          <p>Real-time station compliance registry synchronized with Neon Serverless PostgreSQL. Inspect registered audits, operational forecourt metrics, and field evidence.</p>
+        </div>
+        <div class="admin-hero-actions">
+          <button type="button" class="btn btn-secondary btn-sm" id="btnAdminRefresh">
+            <span>🔄 Sync with Neon</span>
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btnAdminExportCsv">
+            <span>📥 Export CSV</span>
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btnAdminExportJson">
+            <span>📦 Export JSON</span>
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="switchView('interactive')">
+            <span>➕ New Station Audit</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Neon Database Live Connection Bar -->
+      <div class="neon-db-details-card">
+        <div class="neon-meta-left">
+          <div class="neon-logo-pill">
+            <span>NEON</span>
+          </div>
+          <div class="neon-meta-info">
+            <span class="neon-title" id="neonCardTitle">Neon Serverless PostgreSQL (Active)</span>
+            <span class="neon-endpoint-code" id="neonCardEndpoint">ep-rapid-surf-b5cbhx9h-pooler.c-7.us-east-2.aws.neon.tech / neondb</span>
+          </div>
+        </div>
+        <div class="neon-badges-group">
+          <span class="badge-cloud">Region: AWS us-east-2</span>
+          <span class="badge-cloud">Project: taf-station-audit</span>
+          <span class="badge-cloud" id="neonLatencyBadge">Latency: 580ms</span>
+          <span class="status-pill status-pill-pass">🟢 Connected</span>
+        </div>
+      </div>
+
+      <!-- KPI Executive Cards -->
+      <div class="kpi-cards-grid">
+        <div class="kpi-card">
+          <div class="kpi-card-header">
+            <span class="kpi-label">Registered Audits</span>
+            <div class="kpi-icon-wrap kpi-icon-blue">🏢</div>
+          </div>
+          <div class="kpi-value" id="kpiTotalAudits">3</div>
+          <span class="kpi-subtext">Addis Ababa Regional Stations</span>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card-header">
+            <span class="kpi-label">Average Compliance</span>
+            <div class="kpi-icon-wrap kpi-icon-green">📈</div>
+          </div>
+          <div class="kpi-value" id="kpiAvgScore" style="color: #10b981;">88.7%</div>
+          <span class="kpi-subtext">Operational Standard Index</span>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card-header">
+            <span class="kpi-label">Forecourt Pumps</span>
+            <div class="kpi-icon-wrap kpi-icon-amber">⛽</div>
+          </div>
+          <div class="kpi-value" id="kpiDispensers">24 / 27</div>
+          <span class="kpi-subtext">88.9% Dispenser Uptime</span>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card-header">
+            <span class="kpi-label">Open Deficiencies</span>
+            <div class="kpi-icon-wrap kpi-icon-red">⚠️</div>
+          </div>
+          <div class="kpi-value" id="kpiDeficiencies" style="color: #ef4444;">5</div>
+          <span class="kpi-subtext">Corrective Action Items</span>
+        </div>
+      </div>
+
+      <!-- Search & Filters Toolbar -->
+      <div class="admin-filters-bar">
+        <div class="search-input-wrap">
+          <span class="search-icon-svg">🔍</span>
+          <input type="text" id="adminSearchInput" placeholder="Search by station name, canopy ID, auditor, or manager...">
+        </div>
+
+        <div class="filter-selects-group">
+          <select class="filter-select" id="adminStatusFilter">
+            <option value="ALL">All Compliance Statuses</option>
+            <option value="PASS">Pass (≥85%)</option>
+            <option value="ACTION_REQUIRED">Action Required (70-84%)</option>
+            <option value="CRITICAL">Critical Deficiencies (<70%)</option>
+          </select>
+
+          <select class="filter-select" id="adminSortFilter">
+            <option value="date_desc">Audit Date (Newest first)</option>
+            <option value="date_asc">Audit Date (Oldest first)</option>
+            <option value="score_desc">Compliance Score (Highest)</option>
+            <option value="score_asc">Compliance Score (Lowest)</option>
+          </select>
+
+          <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);" id="adminResultsCount">
+            Showing 3 records
+          </span>
+        </div>
+      </div>
+
+      <!-- Registered Records Table -->
+      <div class="records-table-card">
+        <div class="table-responsive-wrap">
+          <table class="records-table">
+            <thead>
+              <tr>
+                <th>Station / Location</th>
+                <th>Canopy ID</th>
+                <th>Audit Date</th>
+                <th>Auditor / Manager</th>
+                <th>Score & Status</th>
+                <th>Pumps (Work/Broke)</th>
+                <th>Photos</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminRecordsTableBody">
+              <!-- Dynamically populated from Neon PostgreSQL -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- =========================================================================
+       AUDIT DETAIL MODAL (FULL RECORD INSPECTOR)
+       ========================================================================= -->
+  <div class="modal-overlay" id="auditDetailModal">
+    <div class="lightbox-card" style="max-width: 900px;">
+      <div class="lightbox-header">
+        <h3 id="detailModalTitle">
+          <span>🔍</span>
+          Station Audit Inspection Record
+        </h3>
+        <button type="button" class="btn-close-modal" id="btnCloseDetailModal">&times;</button>
+      </div>
+
+      <div class="audit-detail-modal-body" id="auditDetailContent">
+        <!-- Dynamically rendered detailed record -->
+      </div>
+
+      <div class="lightbox-footer">
+        <span style="font-size: 0.8rem; color: var(--text-muted);" id="detailModalMeta">Verified via Neon PostgreSQL</span>
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="button" class="btn btn-secondary btn-sm" id="btnDetailPrintPdf">🖨️ Print Official PDF</button>
+          <button type="button" class="btn btn-primary btn-sm" id="btnDetailLoadForm">✏️ Load in Form</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       PHOTO LIGHTBOX MODAL
+       ========================================================================= -->
+  <div class="modal-overlay" id="lightboxOverlay">
+    <div class="lightbox-card">
+      <div class="lightbox-header">
+        <h3 id="lightboxTitle">Inspection Evidence Photo</h3>
+        <button type="button" class="btn-close-modal" id="btnCloseLightbox">&times;</button>
+      </div>
+      <div class="lightbox-body">
+        <div class="lightbox-image-wrap">
+          <img src="" id="lightboxImg" alt="Enlarged Inspection Photo">
+        </div>
+        <div class="form-group">
+          <label for="lightboxCaptionInput">Photo Caption / Field Notes</label>
+          <input type="text" class="form-input" id="lightboxCaptionInput" placeholder="Add specific observation or equipment tag details...">
+        </div>
+      </div>
+      <div class="lightbox-footer">
+        <span style="font-size: 0.8rem; color: var(--text-muted);" id="lightboxMetaTime">Captured: Today</span>
+        <button type="button" class="btn btn-danger btn-sm" id="btnDeletePhoto">🗑️ Delete Photo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       DRAWER: SAVED AUDITS HISTORY
+       ========================================================================= -->
+  <div class="history-drawer-overlay" id="historyDrawerOverlay"></div>
+  <aside class="history-drawer" id="historyDrawer">
+    <div class="drawer-header">
+      <h3 style="font-size: 1rem; font-weight: 800;">Saved Station Audits</h3>
+      <button type="button" class="btn-close-modal" id="btnCloseDrawer">&times;</button>
+    </div>
+    <div class="drawer-content" id="historyListContainer">
+      <!-- Dynamically populated past audits -->
+    </div>
+  </aside>
+
+  <!-- =========================================================================
+       TOAST NOTIFICATION
+       ========================================================================= -->
+  <div class="toast-msg" id="toastMsg">
+    <span id="toastMsgText">Notification message</span>
+  </div>
+
+  <script src="./js/app.js"></script>
+</body>
+</html>
