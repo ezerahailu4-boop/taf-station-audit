@@ -35,9 +35,16 @@ export default async function handler(req, res) {
     return res.status(204).end();
   }
 
-  const { id } = req.query;
-  if (!id) {
-    return res.status(400).json({ success: false, error: "Missing audit ID" });
+  let auditId = req.query?.id;
+  if (!auditId || auditId === "[id].js" || auditId === "[id]") {
+    const rawUrl = req.url || "";
+    const cleanUrl = rawUrl.split("?")[0];
+    const segments = cleanUrl.split("/").filter(Boolean);
+    auditId = segments[segments.length - 1];
+  }
+  const id = auditId;
+  if (!id || id === "[id].js" || id === "[id]") {
+    return res.status(400).json({ success: false, error: "Missing or invalid audit ID" });
   }
 
   // GET: Fetch single audit with photos

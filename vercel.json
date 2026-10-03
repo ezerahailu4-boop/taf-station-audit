@@ -13,7 +13,7 @@
     },
     {
       "source": "/api/audits/:id",
-      "destination": "/api/audits/[id].js"
+      "destination": "/api/audits/[id].js?id=:id"
     }
   ],
   "headers": [
