@@ -734,6 +734,90 @@ body {
   display: none;
 }
 
+/* Auditor Remarks / Notes per question */
+.item-remarks-container {
+  margin-top: 0.55rem;
+  width: 100%;
+}
+
+.remarks-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-sm);
+  padding: 0.28rem 0.65rem;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.remarks-input-wrapper:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.remarks-input-wrapper:focus-within {
+  background: #ffffff;
+  border-color: var(--primary-navy);
+  box-shadow: 0 0 0 3px rgba(13, 27, 46, 0.08);
+}
+
+.remarks-icon {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.item-remarks-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  padding: 0.15rem 0;
+}
+
+.item-remarks-input::placeholder {
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 0.8rem;
+}
+
+.item-remarks-input:not(:placeholder-shown) {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* Document View Remarks line */
+.doc-item-remark-line {
+  margin-top: 0.35rem;
+  font-size: 10.5px;
+  color: #1e3a8a;
+  background: #eff6ff;
+  border-left: 2px solid #3b82f6;
+  padding: 3px 8px;
+  border-radius: 2px;
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* Admin Detail Modal Remarks styling */
+.detail-item-remark {
+  font-size: 0.75rem;
+  color: #0369a1;
+  background: #f0f9ff;
+  border: 1px dashed #bae6fd;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  margin-top: 0.35rem;
+  font-style: italic;
+  width: 100%;
+}
+
 /* Item Options (Toggles / Radio buttons) */
 .item-actions {
   display: flex;

@@ -36,6 +36,19 @@ const DEFAULT_STATE = {
     fireExtinguishers: null, // 'compliant' | 'deficient'
     staffUniform: null // 'good' | 'poor'
   },
+  remarks: {
+    canopyLogo: '',
+    lighting: '',
+    pylonSign: '',
+    dispenserOperational: '',
+    nozzlesBreakaways: '',
+    lubricantShelf: '',
+    lubricantStock: '',
+    carWash: '',
+    generator: '',
+    fireExtinguishers: '',
+    staffUniform: ''
+  },
   correctiveActions: [],
   photos: [], // Array of { id, itemId, itemTitle, dataUrl, caption, timestamp }
   signatures: {
@@ -359,6 +372,18 @@ function bindEventListeners() {
   if (btnAddCorrectiveAction) {
     btnAddCorrectiveAction.addEventListener('click', addCorrectiveAction);
   }
+
+  // Auditor Remarks / Notes Input listeners on each question
+  const remarkInputs = document.querySelectorAll('.item-remarks-input');
+  remarkInputs.forEach(input => {
+    input.addEventListener('input', (e) => {
+      const itemKey = e.target.getAttribute('data-item') || e.target.id.replace('inputRemark_', '');
+      if (!appState.remarks) appState.remarks = {};
+      appState.remarks[itemKey] = e.target.value;
+      renderDocumentRemarks();
+      saveDraftToStorage();
+    });
+  });
 }
 
 /**
@@ -401,6 +426,7 @@ function renderAll() {
   renderMetadataInputs();
   renderChecklistOptions();
   renderDispenserInputs();
+  renderRemarksInputs();
   renderCorrectiveActions();
   renderAllItemPhotos();
   renderComplianceScore();
@@ -506,6 +532,18 @@ function updateDispenserRatioUI() {
       }
     }
   }
+}
+
+/**
+ * Render Question Remarks / Notes Inputs
+ */
+function renderRemarksInputs() {
+  if (!appState.remarks) appState.remarks = {};
+  const remarkInputs = document.querySelectorAll('.item-remarks-input');
+  remarkInputs.forEach(input => {
+    const itemKey = input.getAttribute('data-item') || input.id.replace('inputRemark_', '');
+    input.value = appState.remarks[itemKey] || '';
+  });
 }
 
 /**
@@ -835,6 +873,7 @@ function renderComplianceScore() {
 function renderDocumentView() {
   renderDocumentMetadata();
   renderDocumentCheckboxes();
+  renderDocumentRemarks();
   renderDocumentNotes();
   renderDocumentSignatures();
   renderDocumentAnnex();
@@ -902,6 +941,30 @@ function renderDocumentCheckboxes() {
 
   setDocBox('docBox_uniformGood', appState.checklist.staffUniform === 'good');
   setDocBox('docBox_uniformPoor', appState.checklist.staffUniform === 'poor');
+}
+
+function renderDocumentRemarks() {
+  if (!appState.remarks) appState.remarks = {};
+  const itemKeys = [
+    'canopyLogo', 'lighting', 'pylonSign',
+    'dispenserOperational', 'nozzlesBreakaways',
+    'lubricantShelf', 'lubricantStock',
+    'carWash', 'generator',
+    'fireExtinguishers', 'staffUniform'
+  ];
+
+  itemKeys.forEach(key => {
+    const el = document.getElementById(`docRemark_${key}`);
+    if (!el) return;
+    const note = (appState.remarks[key] || '').trim();
+    if (note) {
+      el.textContent = `💬 Note: ${note}`;
+      el.style.display = 'block';
+    } else {
+      el.textContent = '';
+      el.style.display = 'none';
+    }
+  });
 }
 
 function setDocBox(elementId, isChecked) {
@@ -1208,6 +1271,9 @@ function loadDraftFromStorage() {
           return;
         }
         appState = parsed;
+        if (!appState.remarks) {
+          appState.remarks = parsed.checklist?._remarks || parsed.checklist?.remarks || {};
+        }
       }
     }
   } catch (err) {
@@ -1391,7 +1457,11 @@ async function registerAuditToNeon() {
     const payload = {
       id: appState.id || ('audit_' + Date.now()),
       metadata: appState.metadata,
-      checklist: appState.checklist,
+      checklist: {
+        ...appState.checklist,
+        _remarks: appState.remarks
+      },
+      remarks: appState.remarks,
       correctiveActions: appState.correctiveActions,
       signatures: appState.signatures,
       photos: appState.photos,
@@ -1612,8 +1682,22 @@ window.inspectAuditDetails = async function(auditId) {
     meta.textContent = `Audit Date: ${rec.audit_date} | Registered in Neon DB: ${rec.created_at || 'Cloud'}`;
 
     const checklist = typeof rec.checklist_data === 'string' ? JSON.parse(rec.checklist_data) : (rec.checklist_data || {});
+    const itemRemarks = checklist._remarks || checklist.remarks || rec.remarks || {};
     const corrective = typeof rec.corrective_actions === 'string' ? JSON.parse(rec.corrective_actions) : (rec.corrective_actions || []);
     const photos = rec.photos || [];
+
+    const renderChip = (label, val, key) => {
+      const note = itemRemarks[key];
+      return `
+        <div class="detail-item-chip" style="flex-direction: column; align-items: stretch;">
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <span>${label}:</span>
+            <strong>${val}</strong>
+          </div>
+          ${note ? `<div class="detail-item-remark">💬 Note: ${escapeHtml(note)}</div>` : ''}
+        </div>
+      `;
+    };
 
     // Render detailed content
     content.innerHTML = `
@@ -1643,50 +1727,17 @@ window.inspectAuditDetails = async function(auditId) {
       <div class="detail-section-card">
         <h4>📋 Checklist Verification Results</h4>
         <div class="detail-checklist-grid">
-          <div class="detail-item-chip">
-            <span>Canopy Logo & Brand:</span>
-            <strong>${(checklist.canopyLogo || '—').toUpperCase()}</strong>
-          </div>
-          <div class="detail-item-chip">
-            <span>Canopy & Area Lighting:</span>
-            <strong>${(checklist.lighting || '—').toUpperCase()}</strong>
-          </div>
-          <div class="detail-item-chip">
-            <span>Prime Highway Pylon:</span>
-            <strong>${(checklist.pylonSign || '—').toUpperCase()}</strong>
-          </div>
-          <div class="detail-item-chip">
-            <span>Forecourt Pumps:</span>
-            <strong>${rec.dispensers_working} Work / ${rec.dispensers_broken} Broke</strong>
-          </div>
-          <div class="detail-item-chip">
-            <span>Nozzles & Breakaways:</span>
-            <strong>${(checklist.nozzlesBreakaways || '—').toUpperCase()}</strong>
-          </div>
-          <div class="detail-item-chip">
-            <span>Lubricant Display Shelf:</span>
-            <strong>${(checklist.lubricantShelf || '—').toUpperCase()}</strong>
-          </div>
-          <div class="detail-item-chip">
-            <span>Lubricant Products Stock:</span>
-            <strong>${(checklist.lubricantStock || '—').toUpperCase()}</strong>
-          </div>
-          <div class="detail-item-chip">
-            <span>Car Wash Facility:</span>
-            <strong>${(checklist.carWash || '—').toUpperCase()}</strong>
-          </div>
-          <div class="detail-item-chip">
-            <span>Generator & Backup:</span>
-            <strong>${(checklist.generator || '—').toUpperCase()}</strong>
-          </div>
-          <div class="detail-item-chip">
-            <span>Fire Extinguishers & Sand:</span>
-            <strong>${(checklist.fireExtinguishers || '—').toUpperCase()}</strong>
-          </div>
-          <div class="detail-item-chip">
-            <span>Staff Uniform & PPE:</span>
-            <strong>${(checklist.staffUniform || '—').toUpperCase()}</strong>
-          </div>
+          ${renderChip('Canopy Logo & Brand', (checklist.canopyLogo || '—').toUpperCase(), 'canopyLogo')}
+          ${renderChip('Canopy & Area Lighting', (checklist.lighting || '—').toUpperCase(), 'lighting')}
+          ${renderChip('Prime Highway Pylon', (checklist.pylonSign || '—').toUpperCase(), 'pylonSign')}
+          ${renderChip('Forecourt Pumps', `${rec.dispensers_working} Work / ${rec.dispensers_broken} Broke`, 'dispenserOperational')}
+          ${renderChip('Nozzles & Breakaways', (checklist.nozzlesBreakaways || '—').toUpperCase(), 'nozzlesBreakaways')}
+          ${renderChip('Lubricant Display Shelf', (checklist.lubricantShelf || '—').toUpperCase(), 'lubricantShelf')}
+          ${renderChip('Lubricant Products Stock', (checklist.lubricantStock || '—').toUpperCase(), 'lubricantStock')}
+          ${renderChip('Car Wash Facility', (checklist.carWash || '—').toUpperCase(), 'carWash')}
+          ${renderChip('Generator & Backup', (checklist.generator || '—').toUpperCase(), 'generator')}
+          ${renderChip('Fire Extinguishers & Sand', (checklist.fireExtinguishers || '—').toUpperCase(), 'fireExtinguishers')}
+          ${renderChip('Staff Uniform & PPE', (checklist.staffUniform || '—').toUpperCase(), 'staffUniform')}
         </div>
       </div>
 
@@ -1763,6 +1814,7 @@ window.loadAuditIntoForm = async function(auditId) {
     if (data.success && data.record) {
       const rec = data.record;
       const checklist = typeof rec.checklist_data === 'string' ? JSON.parse(rec.checklist_data) : (rec.checklist_data || {});
+      const remarks = checklist._remarks || checklist.remarks || rec.remarks || {};
       const corrective = typeof rec.corrective_actions === 'string' ? JSON.parse(rec.corrective_actions) : (rec.corrective_actions || []);
       const signatures = typeof rec.signatures === 'string' ? JSON.parse(rec.signatures) : (rec.signatures || {});
       const photos = (rec.photos || []).map(p => ({
@@ -1788,6 +1840,13 @@ window.loadAuditIntoForm = async function(auditId) {
           dispensersWorking: rec.dispensers_working ?? 0,
           dispensersBroken: rec.dispensers_broken ?? 0
         },
+        remarks: Object.assign({
+          canopyLogo: '', lighting: '', pylonSign: '',
+          dispenserOperational: '', nozzlesBreakaways: '',
+          lubricantShelf: '', lubricantStock: '',
+          carWash: '', generator: '',
+          fireExtinguishers: '', staffUniform: ''
+        }, remarks),
         correctiveActions: corrective,
         signatures: signatures,
         photos: photos
@@ -1890,4 +1949,17 @@ function exportToJson() {
   link.click();
   document.body.removeChild(link);
   showToast('Exported JSON database backup');
+}
+
+/**
+ * HTML Entity Escape Helper
+ */
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
