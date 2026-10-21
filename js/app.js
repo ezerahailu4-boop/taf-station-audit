@@ -22,6 +22,8 @@ const DEFAULT_STATE = {
     // 2. FORECOURT & DISPENSERS
     dispensersWorking: 0,
     dispensersBroken: 0,
+    keroseneDispensersWorking: 0,
+    keroseneDispensersBroken: 0,
     nozzlesBreakaways: null, // 'good' | 'action_req'
     
     // 3. LUBRICANTS & RETAIL SHOP
@@ -307,6 +309,8 @@ function bindEventListeners() {
   // Dispensers numeric input listeners
   const inputDispensersWorking = document.getElementById('inputDispensersWorking');
   const inputDispensersBroken = document.getElementById('inputDispensersBroken');
+  const inputKeroseneWorking = document.getElementById('inputKeroseneWorking');
+  const inputKeroseneBroken = document.getElementById('inputKeroseneBroken');
 
   if (inputDispensersWorking) {
     inputDispensersWorking.addEventListener('input', (e) => {
@@ -319,6 +323,22 @@ function bindEventListeners() {
   if (inputDispensersBroken) {
     inputDispensersBroken.addEventListener('input', (e) => {
       appState.checklist.dispensersBroken = parseInt(e.target.value) || 0;
+      updateDispenserRatioUI();
+      renderDocumentView();
+      saveDraftToStorage();
+    });
+  }
+  if (inputKeroseneWorking) {
+    inputKeroseneWorking.addEventListener('input', (e) => {
+      appState.checklist.keroseneDispensersWorking = parseInt(e.target.value) || 0;
+      updateDispenserRatioUI();
+      renderDocumentView();
+      saveDraftToStorage();
+    });
+  }
+  if (inputKeroseneBroken) {
+    inputKeroseneBroken.addEventListener('input', (e) => {
+      appState.checklist.keroseneDispensersBroken = parseInt(e.target.value) || 0;
       updateDispenserRatioUI();
       renderDocumentView();
       saveDraftToStorage();
@@ -499,27 +519,31 @@ function renderChecklistOptions() {
 function renderDispenserInputs() {
   const inputDispensersWorking = document.getElementById('inputDispensersWorking');
   const inputDispensersBroken = document.getElementById('inputDispensersBroken');
+  const inputKeroseneWorking = document.getElementById('inputKeroseneWorking');
+  const inputKeroseneBroken = document.getElementById('inputKeroseneBroken');
 
-  if (inputDispensersWorking) inputDispensersWorking.value = appState.checklist.dispensersWorking;
-  if (inputDispensersBroken) inputDispensersBroken.value = appState.checklist.dispensersBroken;
+  if (inputDispensersWorking) inputDispensersWorking.value = appState.checklist.dispensersWorking ?? 0;
+  if (inputDispensersBroken) inputDispensersBroken.value = appState.checklist.dispensersBroken ?? 0;
+  if (inputKeroseneWorking) inputKeroseneWorking.value = appState.checklist.keroseneDispensersWorking ?? 0;
+  if (inputKeroseneBroken) inputKeroseneBroken.value = appState.checklist.keroseneDispensersBroken ?? 0;
 
   updateDispenserRatioUI();
 }
 
 function updateDispenserRatioUI() {
-  const w = appState.checklist.dispensersWorking || 0;
-  const b = appState.checklist.dispensersBroken || 0;
+  const w = parseInt(appState.checklist.dispensersWorking) || 0;
+  const b = parseInt(appState.checklist.dispensersBroken) || 0;
   const total = w + b;
   const badge = document.getElementById('dispenserRatioBadge');
   
   if (badge) {
     if (total === 0) {
-      badge.textContent = '0 Pumps Registered';
+      badge.textContent = '0 Fuel Pumps Registered';
       badge.style.background = '#e2e8f0';
       badge.style.color = '#475569';
     } else {
       const pct = Math.round((w / total) * 100);
-      badge.textContent = `${w}/${total} Operational (${pct}%)`;
+      badge.textContent = `${w}/${total} Fuel Operational (${pct}%)`;
       if (pct >= 85) {
         badge.style.background = '#d1fae5';
         badge.style.color = '#065f46';
@@ -529,6 +553,33 @@ function updateDispenserRatioUI() {
       } else {
         badge.style.background = '#fee2e2';
         badge.style.color = '#991b1b';
+      }
+    }
+  }
+
+  // Kerosene Dispenser Ratio Badge
+  const kw = parseInt(appState.checklist.keroseneDispensersWorking) || 0;
+  const kb = parseInt(appState.checklist.keroseneDispensersBroken) || 0;
+  const kTotal = kw + kb;
+  const kBadge = document.getElementById('keroseneRatioBadge');
+
+  if (kBadge) {
+    if (kTotal === 0) {
+      kBadge.textContent = '0 Kerosene Registered';
+      kBadge.style.background = '#e2e8f0';
+      kBadge.style.color = '#475569';
+    } else {
+      const kPct = Math.round((kw / kTotal) * 100);
+      kBadge.textContent = `${kw}/${kTotal} Kerosene Oper. (${kPct}%)`;
+      if (kPct >= 85) {
+        kBadge.style.background = '#d1fae5';
+        kBadge.style.color = '#065f46';
+      } else if (kPct >= 60) {
+        kBadge.style.background = '#fef3c7';
+        kBadge.style.color = '#92400e';
+      } else {
+        kBadge.style.background = '#fee2e2';
+        kBadge.style.color = '#991b1b';
       }
     }
   }
@@ -794,6 +845,16 @@ window.stepCount = function(type, delta) {
     appState.checklist.dispensersBroken = Math.max(0, current + delta);
     const input = document.getElementById('inputDispensersBroken');
     if (input) input.value = appState.checklist.dispensersBroken;
+  } else if (type === 'KeroseneWorking') {
+    const current = parseInt(appState.checklist.keroseneDispensersWorking) || 0;
+    appState.checklist.keroseneDispensersWorking = Math.max(0, current + delta);
+    const input = document.getElementById('inputKeroseneWorking');
+    if (input) input.value = appState.checklist.keroseneDispensersWorking;
+  } else if (type === 'KeroseneBroken') {
+    const current = parseInt(appState.checklist.keroseneDispensersBroken) || 0;
+    appState.checklist.keroseneDispensersBroken = Math.max(0, current + delta);
+    const input = document.getElementById('inputKeroseneBroken');
+    if (input) input.value = appState.checklist.keroseneDispensersBroken;
   }
   updateDispenserRatioUI();
   renderDocumentCheckboxes();
@@ -823,14 +884,21 @@ function renderComplianceScore() {
     }
   });
 
-  // Dispenser pump availability weight
-  const w = appState.checklist.dispensersWorking || 0;
-  const b = appState.checklist.dispensersBroken || 0;
+  // Dispenser pump availability weight (Fuel + Kerosene)
+  const w = parseInt(appState.checklist.dispensersWorking) || 0;
+  const b = parseInt(appState.checklist.dispensersBroken) || 0;
+  const kw = parseInt(appState.checklist.keroseneDispensersWorking) || 0;
+  const kb = parseInt(appState.checklist.keroseneDispensersBroken) || 0;
+
   totalScoreable += 2;
-  if (w + b > 0) {
-    const pumpRatio = w / (w + b);
+  const totalPumps = w + b + kw + kb;
+  const workingPumps = w + kw;
+
+  if (totalPumps > 0) {
+    const pumpRatio = workingPumps / totalPumps;
     passedScoreable += pumpRatio * 2;
     if (b > 0) failCount++;
+    if (kb > 0) failCount++;
   } else {
     passedScoreable += 2;
   }
@@ -916,6 +984,11 @@ function renderDocumentCheckboxes() {
   const docDispBroken = document.getElementById('docDispensersBroken');
   if (docDispWorking) docDispWorking.textContent = appState.checklist.dispensersWorking ?? '0';
   if (docDispBroken) docDispBroken.textContent = appState.checklist.dispensersBroken ?? '0';
+
+  const docKeroWorking = document.getElementById('docKeroseneWorking');
+  const docKeroBroken = document.getElementById('docKeroseneBroken');
+  if (docKeroWorking) docKeroWorking.textContent = appState.checklist.keroseneDispensersWorking ?? '0';
+  if (docKeroBroken) docKeroBroken.textContent = appState.checklist.keroseneDispensersBroken ?? '0';
 
   setDocBox('docBox_nozzleGood', appState.checklist.nozzlesBreakaways === 'good');
   setDocBox('docBox_nozzleAction', appState.checklist.nozzlesBreakaways === 'action_req');
@@ -1271,6 +1344,9 @@ function loadDraftFromStorage() {
           return;
         }
         appState = parsed;
+        if (!appState.checklist) appState.checklist = {};
+        if (appState.checklist.keroseneDispensersWorking === undefined) appState.checklist.keroseneDispensersWorking = 0;
+        if (appState.checklist.keroseneDispensersBroken === undefined) appState.checklist.keroseneDispensersBroken = 0;
         if (!appState.remarks) {
           appState.remarks = parsed.checklist?._remarks || parsed.checklist?.remarks || {};
         }
@@ -1342,6 +1418,9 @@ function openHistoryDrawer() {
       card.addEventListener('click', () => {
         if (confirm(`Load audit for ${item.metadata.stationName}? Current unsaved edits will be replaced.`)) {
           appState = item;
+          if (!appState.checklist) appState.checklist = {};
+          if (appState.checklist.keroseneDispensersWorking === undefined) appState.checklist.keroseneDispensersWorking = 0;
+          if (appState.checklist.keroseneDispensersBroken === undefined) appState.checklist.keroseneDispensersBroken = 0;
           if (!appState.remarks) {
             appState.remarks = item.checklist?._remarks || item.checklist?.remarks || {};
           }
@@ -1734,6 +1813,7 @@ window.inspectAuditDetails = async function(auditId) {
           ${renderChip('Canopy & Area Lighting', (checklist.lighting || '—').toUpperCase(), 'lighting')}
           ${renderChip('Prime Highway Pylon', (checklist.pylonSign || '—').toUpperCase(), 'pylonSign')}
           ${renderChip('Forecourt Pumps', `${rec.dispensers_working} Work / ${rec.dispensers_broken} Broke`, 'dispenserOperational')}
+          ${renderChip('Kerosene Dispenser', `${checklist.keroseneDispensersWorking ?? 0} Work / ${checklist.keroseneDispensersBroken ?? 0} Broke`, 'dispenserOperational')}
           ${renderChip('Nozzles & Breakaways', (checklist.nozzlesBreakaways || '—').toUpperCase(), 'nozzlesBreakaways')}
           ${renderChip('Lubricant Display Shelf', (checklist.lubricantShelf || '—').toUpperCase(), 'lubricantShelf')}
           ${renderChip('Lubricant Products Stock', (checklist.lubricantStock || '—').toUpperCase(), 'lubricantStock')}
@@ -1841,7 +1921,9 @@ window.loadAuditIntoForm = async function(auditId) {
         checklist: {
           ...checklist,
           dispensersWorking: rec.dispensers_working ?? 0,
-          dispensersBroken: rec.dispensers_broken ?? 0
+          dispensersBroken: rec.dispensers_broken ?? 0,
+          keroseneDispensersWorking: checklist.keroseneDispensersWorking ?? 0,
+          keroseneDispensersBroken: checklist.keroseneDispensersBroken ?? 0
         },
         remarks: Object.assign({
           canopyLogo: '', lighting: '', pylonSign: '',

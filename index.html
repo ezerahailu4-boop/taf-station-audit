@@ -313,23 +313,57 @@
             </div>
             <div class="item-actions">
               <div class="dispenser-counts-group">
-                <div class="count-field">
-                  <label for="inputDispensersWorking">Working:</label>
-                  <div class="stepper-wrap">
-                    <button type="button" class="btn-stepper" onclick="stepCount('Working', -1)">−</button>
-                    <input type="number" id="inputDispensersWorking" class="count-input" min="0" max="60" value="0">
-                    <button type="button" class="btn-stepper" onclick="stepCount('Working', 1)">+</button>
+                <!-- Multi-Product Fuel Dispensers -->
+                <div class="dispenser-section-block">
+                  <div class="dispenser-group-title">
+                    <span>⛽ Multi-Product Fuel Dispensers</span>
+                  </div>
+                  <div class="dispenser-sub-row">
+                    <div class="count-field">
+                      <label for="inputDispensersWorking">Working:</label>
+                      <div class="stepper-wrap">
+                        <button type="button" class="btn-stepper" onclick="stepCount('Working', -1)">−</button>
+                        <input type="number" id="inputDispensersWorking" class="count-input" min="0" max="60" value="0">
+                        <button type="button" class="btn-stepper" onclick="stepCount('Working', 1)">+</button>
+                      </div>
+                    </div>
+                    <div class="count-field">
+                      <label for="inputDispensersBroken">Broken:</label>
+                      <div class="stepper-wrap">
+                        <button type="button" class="btn-stepper" onclick="stepCount('Broken', -1)">−</button>
+                        <input type="number" id="inputDispensersBroken" class="count-input" min="0" max="60" value="0">
+                        <button type="button" class="btn-stepper" onclick="stepCount('Broken', 1)">+</button>
+                      </div>
+                    </div>
+                    <span class="count-badge-ratio" id="dispenserRatioBadge">0 Pumps Recorded</span>
                   </div>
                 </div>
-                <div class="count-field">
-                  <label for="inputDispensersBroken">Broken:</label>
-                  <div class="stepper-wrap">
-                    <button type="button" class="btn-stepper" onclick="stepCount('Broken', -1)">−</button>
-                    <input type="number" id="inputDispensersBroken" class="count-input" min="0" max="60" value="0">
-                    <button type="button" class="btn-stepper" onclick="stepCount('Broken', 1)">+</button>
+
+                <!-- Dedicated Kerosene Dispenser -->
+                <div class="dispenser-section-block" style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-color);">
+                  <div class="dispenser-group-title">
+                    <span>🛢️ Kerosene Dispenser (ጋዝ)</span>
+                  </div>
+                  <div class="dispenser-sub-row">
+                    <div class="count-field">
+                      <label for="inputKeroseneWorking">Working:</label>
+                      <div class="stepper-wrap">
+                        <button type="button" class="btn-stepper" onclick="stepCount('KeroseneWorking', -1)">−</button>
+                        <input type="number" id="inputKeroseneWorking" class="count-input" min="0" max="20" value="0">
+                        <button type="button" class="btn-stepper" onclick="stepCount('KeroseneWorking', 1)">+</button>
+                      </div>
+                    </div>
+                    <div class="count-field">
+                      <label for="inputKeroseneBroken">Broken:</label>
+                      <div class="stepper-wrap">
+                        <button type="button" class="btn-stepper" onclick="stepCount('KeroseneBroken', -1)">−</button>
+                        <input type="number" id="inputKeroseneBroken" class="count-input" min="0" max="20" value="0">
+                        <button type="button" class="btn-stepper" onclick="stepCount('KeroseneBroken', 1)">+</button>
+                      </div>
+                    </div>
+                    <span class="count-badge-ratio" id="keroseneRatioBadge">0 Kerosene Pumps</span>
                   </div>
                 </div>
-                <span class="count-badge-ratio" id="dispenserRatioBadge">0 Pumps Recorded</span>
               </div>
             </div>
           </div>
@@ -747,8 +781,16 @@
                   <div class="doc-item-remark-line" id="docRemark_dispenserOperational" style="display: none;"></div>
                 </div>
                 <div class="doc-dispenser-status-text">
-                  Working: <span class="doc-dispenser-line" id="docDispensersWorking">6</span>
-                  Broken: <span class="doc-dispenser-line" id="docDispensersBroken">1</span>
+                  <div style="margin-bottom: 3px;">
+                    <span style="font-size: 11px; color: #475569;">Fuel Pumps:</span>
+                    Working: <span class="doc-dispenser-line" id="docDispensersWorking">0</span>
+                    Broken: <span class="doc-dispenser-line" id="docDispensersBroken">0</span>
+                  </div>
+                  <div>
+                    <span style="font-size: 11px; color: #475569;">Kerosene:</span>
+                    Working: <span class="doc-dispenser-line" id="docKeroseneWorking">0</span>
+                    Broken: <span class="doc-dispenser-line" id="docKeroseneBroken">0</span>
+                  </div>
                 </div>
               </div>
 

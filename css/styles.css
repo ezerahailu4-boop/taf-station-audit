@@ -911,12 +911,37 @@ body {
 /* Forecourt Dispenser Numeric Input Row */
 .dispenser-counts-group {
   display: flex;
-  align-items: center;
-  gap: 1.25rem;
+  flex-direction: column;
+  gap: 0.5rem;
   background: var(--bg-subtle);
-  padding: 0.45rem 0.85rem;
+  padding: 0.65rem 0.95rem;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
+  min-width: 320px;
+}
+
+.dispenser-section-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dispenser-group-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--primary-navy);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.dispenser-sub-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .count-field {
