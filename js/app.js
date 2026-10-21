@@ -1342,6 +1342,9 @@ function openHistoryDrawer() {
       card.addEventListener('click', () => {
         if (confirm(`Load audit for ${item.metadata.stationName}? Current unsaved edits will be replaced.`)) {
           appState = item;
+          if (!appState.remarks) {
+            appState.remarks = item.checklist?._remarks || item.checklist?.remarks || {};
+          }
           renderAll();
           saveDraftToStorage();
           closeHistoryDrawer();
