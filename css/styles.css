@@ -1098,7 +1098,7 @@ body {
   margin-top: 0.5rem;
 }
 
-/* Sign-off & Signature Section */
+/* Sign-off & Signature Section - Electronic Signature by Name */
 .signatures-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -1107,52 +1107,222 @@ body {
 }
 
 .signature-box {
-  background: #fafbfc;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  padding: 1rem;
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.85rem;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.signature-box h4 {
-  font-size: 0.85rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--primary-navy);
+.signature-box:focus-within {
+  border-color: var(--accent-gold);
+  box-shadow: 0 4px 16px rgba(217, 119, 6, 0.12);
 }
 
-.canvas-signature-wrap {
-  position: relative;
-  background: #fff;
-  border: 1px dashed #cbd5e1;
-  border-radius: 4px;
-  overflow: hidden;
-  height: 120px;
-  cursor: crosshair;
-}
-
-.canvas-signature-wrap canvas {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.canvas-placeholder-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 0.75rem;
-  color: #94a3b8;
-  pointer-events: none;
-}
-
-.sig-actions {
+.sig-header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 0.5rem;
+}
+
+.sig-header-row h4 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--primary-navy);
+  letter-spacing: 0.3px;
+  margin: 0;
+}
+
+.sig-role-chip {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 9999px;
+  text-transform: uppercase;
+}
+
+.sig-instruction {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.sig-name-field-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sig-name-field-wrap label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.sig-input-inner {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.sig-input-icon {
+  position: absolute;
+  left: 0.75rem;
+  font-size: 1rem;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.sig-name-input {
+  width: 100%;
+  padding: 0.65rem 2.2rem 0.65rem 2.4rem !important;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--primary-navy);
+  background: #ffffff;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+
+.sig-name-input:focus {
+  border-color: var(--accent-gold);
+  outline: none;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
+}
+
+.btn-clear-sig-name {
+  position: absolute;
+  right: 0.6rem;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 4px;
+  line-height: 1;
+  border-radius: 50%;
+  transition: color 0.15s, background 0.15s;
+}
+
+.btn-clear-sig-name:hover {
+  color: #ef4444;
+  background: #fee2e2;
+}
+
+/* Script Signature Preview Card */
+.signature-display-card {
+  background: #ffffff;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: var(--radius-sm);
+  padding: 0.9rem 1.15rem;
+  min-height: 105px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  transition: all 0.25s ease;
+}
+
+.signature-display-card.is-signed {
+  border-style: solid;
+  border-color: #cbd5e1;
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.sig-script-preview {
+  font-family: 'Dancing Script', 'Caveat', 'Segoe Script', cursive;
+  font-size: 2.1rem;
+  font-weight: 700;
+  color: #0e1e38;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  letter-spacing: 0.5px;
+  user-select: none;
+  word-break: break-word;
+}
+
+.sig-script-preview.placeholder {
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-style: italic;
+  color: #94a3b8;
+}
+
+.sig-meta-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 0.5rem;
+  margin-top: 0.4rem;
+  font-size: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.sig-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+.sig-status-badge.signed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.sig-status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot.green {
+  background: #22c55e;
+}
+
+.status-dot.amber {
+  background: #f59e0b;
+}
+
+.sig-date-text {
+  color: #64748b;
+  font-size: 0.72rem;
+}
+
+.sig-legal-notice {
+  font-size: 0.72rem;
+  color: #64748b;
+  line-height: 1.4;
+  margin: 0;
+  font-style: italic;
 }
 
 /* ==========================================================================
@@ -1410,6 +1580,17 @@ body {
   max-height: 48px;
   max-width: 140px;
   object-fit: contain;
+}
+
+.doc-script-signature {
+  font-family: 'Dancing Script', 'Caveat', 'Segoe Script', cursive;
+  font-size: 26px;
+  font-weight: 700;
+  color: #0f172a;
+  display: inline-block;
+  line-height: 1;
+  padding-bottom: 2px;
+  letter-spacing: 0.5px;
 }
 
 /* Document Footer */

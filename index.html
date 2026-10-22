@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TAF ENERGIES — Station Information & Audit Management System</title>
   
-  <!-- Modern Typography (Inter & Outfit) -->
+  <!-- Modern Typography (Inter, Outfit & Dancing Script for Signatures) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   
   <meta name="theme-color" content="#0d1b2e">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -207,15 +207,6 @@
                   <input type="text" class="item-remarks-input" id="inputRemark_canopyLogo" data-item="canopyLogo" placeholder="Add auditor notes / observations for this item...">
                 </div>
               </div>
-
-              <!-- Photo Upload & Thumbnails -->
-              <div class="item-photos-container">
-                <input type="file" id="file_canopyLogo" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'canopyLogo', 'Canopy Station Number & TAF Logo')">
-                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_canopyLogo').click()">
-                  <span>📷 Upload / Take Photo</span>
-                </button>
-                <div class="photo-thumbnails-tray" id="photos_tray_canopyLogo"></div>
-              </div>
             </div>
             <div class="item-actions">
               <div class="options-group" id="options_canopyLogo"></div>
@@ -235,14 +226,6 @@
                   <input type="text" class="item-remarks-input" id="inputRemark_lighting" data-item="lighting" placeholder="Add auditor notes / observations for this item...">
                 </div>
               </div>
-
-              <div class="item-photos-container">
-                <input type="file" id="file_lighting" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'lighting', 'Canopy & Area Lighting')">
-                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_lighting').click()">
-                  <span>📷 Upload / Take Photo</span>
-                </button>
-                <div class="photo-thumbnails-tray" id="photos_tray_lighting"></div>
-              </div>
             </div>
             <div class="item-actions">
               <div class="options-group" id="options_lighting"></div>
@@ -261,14 +244,6 @@
                   <span class="remarks-icon">💬</span>
                   <input type="text" class="item-remarks-input" id="inputRemark_pylonSign" data-item="pylonSign" placeholder="Add auditor notes / observations for this item...">
                 </div>
-              </div>
-
-              <div class="item-photos-container">
-                <input type="file" id="file_pylonSign" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'pylonSign', 'Prime Sign / Pylon Sign')">
-                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_pylonSign').click()">
-                  <span>📷 Upload / Take Photo</span>
-                </button>
-                <div class="photo-thumbnails-tray" id="photos_tray_pylonSign"></div>
               </div>
             </div>
             <div class="item-actions">
@@ -301,14 +276,6 @@
                   <span class="remarks-icon">💬</span>
                   <input type="text" class="item-remarks-input" id="inputRemark_dispenserOperational" data-item="dispenserOperational" placeholder="Add auditor notes / observations for this item...">
                 </div>
-              </div>
-
-              <div class="item-photos-container">
-                <input type="file" id="file_dispenserOperational" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'dispenserOperational', 'Dispenser Operational Status')">
-                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_dispenserOperational').click()">
-                  <span>📷 Upload / Take Photo</span>
-                </button>
-                <div class="photo-thumbnails-tray" id="photos_tray_dispenserOperational"></div>
               </div>
             </div>
             <div class="item-actions">
@@ -381,14 +348,6 @@
                   <input type="text" class="item-remarks-input" id="inputRemark_nozzlesBreakaways" data-item="nozzlesBreakaways" placeholder="Add auditor notes / observations for this item...">
                 </div>
               </div>
-
-              <div class="item-photos-container">
-                <input type="file" id="file_nozzlesBreakaways" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'nozzlesBreakaways', 'Nozzles, Hoses & Breakaways')">
-                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_nozzlesBreakaways').click()">
-                  <span>📷 Upload / Take Photo</span>
-                </button>
-                <div class="photo-thumbnails-tray" id="photos_tray_nozzlesBreakaways"></div>
-              </div>
             </div>
             <div class="item-actions">
               <div class="options-group" id="options_nozzlesBreakaways"></div>
@@ -421,14 +380,6 @@
                   <input type="text" class="item-remarks-input" id="inputRemark_lubricantShelf" data-item="lubricantShelf" placeholder="Add auditor notes / observations for this item...">
                 </div>
               </div>
-
-              <div class="item-photos-container">
-                <input type="file" id="file_lubricantShelf" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'lubricantShelf', 'Lubricant Display Shelf')">
-                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_lubricantShelf').click()">
-                  <span>📷 Upload / Take Photo</span>
-                </button>
-                <div class="photo-thumbnails-tray" id="photos_tray_lubricantShelf"></div>
-              </div>
             </div>
             <div class="item-actions">
               <div class="options-group" id="options_lubricantShelf"></div>
@@ -447,14 +398,6 @@
                   <span class="remarks-icon">💬</span>
                   <input type="text" class="item-remarks-input" id="inputRemark_lubricantStock" data-item="lubricantStock" placeholder="Add auditor notes / observations for this item...">
                 </div>
-              </div>
-
-              <div class="item-photos-container">
-                <input type="file" id="file_lubricantStock" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'lubricantStock', 'Lubricant Products Stock')">
-                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_lubricantStock').click()">
-                  <span>📷 Upload / Take Photo</span>
-                </button>
-                <div class="photo-thumbnails-tray" id="photos_tray_lubricantStock"></div>
               </div>
             </div>
             <div class="item-actions">
@@ -488,14 +431,6 @@
                   <input type="text" class="item-remarks-input" id="inputRemark_carWash" data-item="carWash" placeholder="Add auditor notes / observations for this item...">
                 </div>
               </div>
-
-              <div class="item-photos-container">
-                <input type="file" id="file_carWash" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'carWash', 'Car Wash Facility')">
-                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_carWash').click()">
-                  <span>📷 Upload / Take Photo</span>
-                </button>
-                <div class="photo-thumbnails-tray" id="photos_tray_carWash"></div>
-              </div>
             </div>
             <div class="item-actions">
               <div class="options-group" id="options_carWash"></div>
@@ -514,14 +449,6 @@
                   <span class="remarks-icon">💬</span>
                   <input type="text" class="item-remarks-input" id="inputRemark_generator" data-item="generator" placeholder="Add auditor notes / observations for this item...">
                 </div>
-              </div>
-
-              <div class="item-photos-container">
-                <input type="file" id="file_generator" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'generator', 'Generator & Backup Power')">
-                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_generator').click()">
-                  <span>📷 Upload / Take Photo</span>
-                </button>
-                <div class="photo-thumbnails-tray" id="photos_tray_generator"></div>
               </div>
             </div>
             <div class="item-actions">
@@ -555,14 +482,6 @@
                   <input type="text" class="item-remarks-input" id="inputRemark_fireExtinguishers" data-item="fireExtinguishers" placeholder="Add auditor notes / observations for this item...">
                 </div>
               </div>
-
-              <div class="item-photos-container">
-                <input type="file" id="file_fireExtinguishers" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'fireExtinguishers', 'Fire Extinguishers & Sand Buckets')">
-                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_fireExtinguishers').click()">
-                  <span>📷 Upload / Take Photo</span>
-                </button>
-                <div class="photo-thumbnails-tray" id="photos_tray_fireExtinguishers"></div>
-              </div>
             </div>
             <div class="item-actions">
               <div class="options-group" id="options_fireExtinguishers"></div>
@@ -581,14 +500,6 @@
                   <span class="remarks-icon">💬</span>
                   <input type="text" class="item-remarks-input" id="inputRemark_staffUniform" data-item="staffUniform" placeholder="Add auditor notes / observations for this item...">
                 </div>
-              </div>
-
-              <div class="item-photos-container">
-                <input type="file" id="file_staffUniform" accept="image/*" capture="environment" class="hidden-file-input" multiple onchange="handlePhotoSelect(event, 'staffUniform', 'Staff Uniform & Presentation')">
-                <button type="button" class="btn-upload-photo" onclick="document.getElementById('file_staffUniform').click()">
-                  <span>📷 Upload / Take Photo</span>
-                </button>
-                <div class="photo-thumbnails-tray" id="photos_tray_staffUniform"></div>
               </div>
             </div>
             <div class="item-actions">
@@ -643,28 +554,62 @@
         <div class="signatures-grid">
           <!-- Auditor Signature -->
           <div class="signature-box">
-            <h4>Auditor Attestation & Signature</h4>
-            <div class="canvas-signature-wrap">
-              <canvas id="sigCanvasAuditor"></canvas>
-              <span class="canvas-placeholder-text">Draw Auditor Signature Here</span>
+            <div class="sig-header-row">
+              <h4>Lead Auditor Attestation & Signature</h4>
+              <span class="sig-role-chip">Lead Internal Auditor</span>
             </div>
-            <div class="sig-actions">
-              <span style="font-size: 0.75rem; color: var(--text-muted);">Lead Internal Auditor</span>
-              <button type="button" class="btn btn-secondary btn-sm" id="btnClearSigAuditor">Clear</button>
+            <p class="sig-instruction">Enter your full name to generate an authorized electronic sign-off for this audit.</p>
+
+            <div class="sig-name-field-wrap">
+              <label for="inputSigAuditorName">Lead Auditor Name</label>
+              <div class="sig-input-inner">
+                <span class="sig-input-icon">✍️</span>
+                <input type="text" class="form-input sig-name-input" id="inputSigAuditorName" placeholder="Type auditor full name to sign...">
+                <button type="button" class="btn-clear-sig-name" id="btnClearSigAuditor" title="Clear Name">✕</button>
+              </div>
             </div>
+
+            <div class="signature-display-card" id="sigDisplayCardAuditor">
+              <div class="sig-script-preview placeholder" id="sigScriptAuditor">Type your name above to sign</div>
+              <div class="sig-meta-footer">
+                <span class="sig-status-badge pending" id="sigStatusAuditor">
+                  <span class="status-dot amber"></span> Pending Signature
+                </span>
+                <span class="sig-date-text" id="sigDateAuditor">Awaiting signature</span>
+              </div>
+            </div>
+
+            <p class="sig-legal-notice">I hereby certify that this audit was conducted in compliance with TAF Energies HSE & Retail Operating Standards.</p>
           </div>
 
           <!-- Station Manager Signature -->
           <div class="signature-box">
-            <h4>Station Manager Acknowledgement</h4>
-            <div class="canvas-signature-wrap">
-              <canvas id="sigCanvasManager"></canvas>
-              <span class="canvas-placeholder-text">Draw Manager Signature Here</span>
+            <div class="sig-header-row">
+              <h4>Station Manager Acknowledgement</h4>
+              <span class="sig-role-chip">Station Supervisor / Manager</span>
             </div>
-            <div class="sig-actions">
-              <span style="font-size: 0.75rem; color: var(--text-muted);">Station Supervisor on Duty</span>
-              <button type="button" class="btn btn-secondary btn-sm" id="btnClearSigManager">Clear</button>
+            <p class="sig-instruction">Enter manager full name to sign and acknowledge inspection findings.</p>
+
+            <div class="sig-name-field-wrap">
+              <label for="inputSigManagerName">Station Manager / Supervisor Name</label>
+              <div class="sig-input-inner">
+                <span class="sig-input-icon">✍️</span>
+                <input type="text" class="form-input sig-name-input" id="inputSigManagerName" placeholder="Type station manager name to sign...">
+                <button type="button" class="btn-clear-sig-name" id="btnClearSigManager" title="Clear Name">✕</button>
+              </div>
             </div>
+
+            <div class="signature-display-card" id="sigDisplayCardManager">
+              <div class="sig-script-preview placeholder" id="sigScriptManager">Type manager name above to sign</div>
+              <div class="sig-meta-footer">
+                <span class="sig-status-badge pending" id="sigStatusManager">
+                  <span class="status-dot amber"></span> Pending Signature
+                </span>
+                <span class="sig-date-text" id="sigDateManager">Awaiting signature</span>
+              </div>
+            </div>
+
+            <p class="sig-legal-notice">I acknowledge receipt and review of this station audit report and corrective actions.</p>
           </div>
         </div>
       </section>
@@ -987,12 +932,12 @@
             <div class="doc-signoff-col">
               <span class="doc-meta-label">LEAD AUDITOR SIGNATURE & ATTESTATION</span>
               <div class="doc-sig-preview" id="docSigAuditor"></div>
-              <span style="font-size: 11px; font-weight: 600;" id="docAuditorNameText">Dawit Bekele</span>
+              <span style="font-size: 11px; font-weight: 600;" id="docAuditorNameText">—</span>
             </div>
             <div class="doc-signoff-col">
               <span class="doc-meta-label">STATION MANAGER / SUPERVISOR SIGNATURE</span>
               <div class="doc-sig-preview" id="docSigManager"></div>
-              <span style="font-size: 11px; font-weight: 600;" id="docManagerNameText">Solomon Tadesse</span>
+              <span style="font-size: 11px; font-weight: 600;" id="docManagerNameText">—</span>
             </div>
           </div>
 

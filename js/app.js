@@ -293,15 +293,31 @@ function bindEventListeners() {
   }
   if (inputAuditorName) {
     inputAuditorName.addEventListener('input', (e) => {
-      appState.metadata.auditorName = e.target.value;
+      const val = e.target.value;
+      appState.metadata.auditorName = val;
+      appState.signatures.auditor = val;
+      const inputSigAuditor = document.getElementById('inputSigAuditorName');
+      if (inputSigAuditor && inputSigAuditor.value !== val) {
+        inputSigAuditor.value = val;
+      }
+      updateAuditorSignatureDisplay(val);
       renderDocumentMetadata();
+      renderDocumentSignatures();
       saveDraftToStorage();
     });
   }
   if (inputManagerName) {
     inputManagerName.addEventListener('input', (e) => {
-      appState.metadata.managerName = e.target.value;
+      const val = e.target.value;
+      appState.metadata.managerName = val;
+      appState.signatures.manager = val;
+      const inputSigManager = document.getElementById('inputSigManagerName');
+      if (inputSigManager && inputSigManager.value !== val) {
+        inputSigManager.value = val;
+      }
+      updateManagerSignatureDisplay(val);
       renderDocumentMetadata();
+      renderDocumentSignatures();
       saveDraftToStorage();
     });
   }
@@ -463,12 +479,22 @@ function renderMetadataInputs() {
   const inputDate = document.getElementById('inputDate');
   const inputAuditorName = document.getElementById('inputAuditorName');
   const inputManagerName = document.getElementById('inputManagerName');
+  const inputSigAuditor = document.getElementById('inputSigAuditorName');
+  const inputSigManager = document.getElementById('inputSigManagerName');
+
+  const auditorVal = appState.metadata.auditorName || appState.signatures.auditor || '';
+  const managerVal = appState.metadata.managerName || appState.signatures.manager || '';
 
   if (inputStationName) inputStationName.value = appState.metadata.stationName || '';
   if (inputCanopyId) inputCanopyId.value = appState.metadata.canopyId || '';
   if (inputDate) inputDate.value = appState.metadata.date || '';
-  if (inputAuditorName) inputAuditorName.value = appState.metadata.auditorName || '';
-  if (inputManagerName) inputManagerName.value = appState.metadata.managerName || '';
+  if (inputAuditorName) inputAuditorName.value = auditorVal;
+  if (inputManagerName) inputManagerName.value = managerVal;
+  if (inputSigAuditor) inputSigAuditor.value = auditorVal;
+  if (inputSigManager) inputSigManager.value = managerVal;
+
+  updateAuditorSignatureDisplay(auditorVal);
+  updateManagerSignatureDisplay(managerVal);
 }
 
 /**
@@ -1086,14 +1112,34 @@ function renderDocumentSignatures() {
   const docAuditorNameText = document.getElementById('docAuditorNameText');
   const docManagerNameText = document.getElementById('docManagerNameText');
 
-  if (docAuditorNameText) docAuditorNameText.textContent = appState.metadata.auditorName || 'Auditor';
-  if (docManagerNameText) docManagerNameText.textContent = appState.metadata.managerName || 'Station Manager';
+  const auditorName = (appState.metadata.auditorName || appState.signatures.auditor || '').trim();
+  const managerName = (appState.metadata.managerName || appState.signatures.manager || '').trim();
+
+  if (docAuditorNameText) {
+    docAuditorNameText.textContent = auditorName || 'Lead Auditor';
+  }
+  if (docManagerNameText) {
+    docManagerNameText.textContent = managerName || 'Station Supervisor';
+  }
 
   if (docSigAuditor) {
-    docSigAuditor.innerHTML = appState.signatures.auditor ? `<img src="${appState.signatures.auditor}" alt="Auditor Signature">` : '<span style="color:#cbd5e1;font-size:11px;">(Signed Electronically)</span>';
+    if (appState.signatures.auditor && typeof appState.signatures.auditor === 'string' && appState.signatures.auditor.startsWith('data:image')) {
+      docSigAuditor.innerHTML = `<img src="${appState.signatures.auditor}" alt="Auditor Signature">`;
+    } else if (auditorName) {
+      docSigAuditor.innerHTML = `<span class="doc-script-signature">${escapeHtml(auditorName)}</span>`;
+    } else {
+      docSigAuditor.innerHTML = '<span style="color:#cbd5e1;font-size:11px;">(Signed Electronically)</span>';
+    }
   }
+
   if (docSigManager) {
-    docSigManager.innerHTML = appState.signatures.manager ? `<img src="${appState.signatures.manager}" alt="Manager Signature">` : '<span style="color:#cbd5e1;font-size:11px;">(Signed Electronically)</span>';
+    if (appState.signatures.manager && typeof appState.signatures.manager === 'string' && appState.signatures.manager.startsWith('data:image')) {
+      docSigManager.innerHTML = `<img src="${appState.signatures.manager}" alt="Manager Signature">`;
+    } else if (managerName) {
+      docSigManager.innerHTML = `<span class="doc-script-signature">${escapeHtml(managerName)}</span>`;
+    } else {
+      docSigManager.innerHTML = '<span style="color:#cbd5e1;font-size:11px;">(Signed Electronically)</span>';
+    }
   }
 }
 
@@ -1172,118 +1218,161 @@ function renderDocumentAnnex() {
 }
 
 /**
- * DIGITAL SIGNATURES PADS
+ * ELECTRONIC SIGNATURES BY NAME
  */
-let auditorCanvas, managerCanvas;
-let auditorCtx, managerCtx;
-let isDrawingAuditor = false;
-let isDrawingManager = false;
-
 function initSignatures() {
-  auditorCanvas = document.getElementById('sigCanvasAuditor');
-  managerCanvas = document.getElementById('sigCanvasManager');
-
-  if (auditorCanvas) {
-    setupCanvas(auditorCanvas, (dataUrl) => {
-      appState.signatures.auditor = dataUrl;
-      renderDocumentSignatures();
-      saveDraftToStorage();
-    });
-  }
-
-  if (managerCanvas) {
-    setupCanvas(managerCanvas, (dataUrl) => {
-      appState.signatures.manager = dataUrl;
-      renderDocumentSignatures();
-      saveDraftToStorage();
-    });
-  }
+  const inputSigAuditor = document.getElementById('inputSigAuditorName');
+  const inputSigManager = document.getElementById('inputSigManagerName');
+  const inputAuditorTop = document.getElementById('inputAuditorName');
+  const inputManagerTop = document.getElementById('inputManagerName');
 
   const btnClearAuditor = document.getElementById('btnClearSigAuditor');
+  const btnClearManager = document.getElementById('btnClearSigManager');
+
+  if (inputSigAuditor) {
+    inputSigAuditor.addEventListener('input', (e) => {
+      const val = e.target.value;
+      appState.metadata.auditorName = val;
+      appState.signatures.auditor = val;
+      if (inputAuditorTop && inputAuditorTop.value !== val) {
+        inputAuditorTop.value = val;
+      }
+      updateAuditorSignatureDisplay(val);
+      renderDocumentMetadata();
+      renderDocumentSignatures();
+      saveDraftToStorage();
+    });
+  }
+
+  if (inputSigManager) {
+    inputSigManager.addEventListener('input', (e) => {
+      const val = e.target.value;
+      appState.metadata.managerName = val;
+      appState.signatures.manager = val;
+      if (inputManagerTop && inputManagerTop.value !== val) {
+        inputManagerTop.value = val;
+      }
+      updateManagerSignatureDisplay(val);
+      renderDocumentMetadata();
+      renderDocumentSignatures();
+      saveDraftToStorage();
+    });
+  }
+
   if (btnClearAuditor) {
     btnClearAuditor.addEventListener('click', () => {
-      clearCanvas(auditorCanvas);
+      appState.metadata.auditorName = '';
       appState.signatures.auditor = '';
+      if (inputSigAuditor) inputSigAuditor.value = '';
+      if (inputAuditorTop) inputAuditorTop.value = '';
+      updateAuditorSignatureDisplay('');
+      renderDocumentMetadata();
       renderDocumentSignatures();
       saveDraftToStorage();
     });
   }
 
-  const btnClearManager = document.getElementById('btnClearSigManager');
   if (btnClearManager) {
     btnClearManager.addEventListener('click', () => {
-      clearCanvas(managerCanvas);
+      appState.metadata.managerName = '';
       appState.signatures.manager = '';
+      if (inputSigManager) inputSigManager.value = '';
+      if (inputManagerTop) inputManagerTop.value = '';
+      updateManagerSignatureDisplay('');
+      renderDocumentMetadata();
       renderDocumentSignatures();
       saveDraftToStorage();
     });
   }
+
+  const initialAuditor = appState.metadata.auditorName || appState.signatures.auditor || '';
+  const initialManager = appState.metadata.managerName || appState.signatures.manager || '';
+  updateAuditorSignatureDisplay(initialAuditor);
+  updateManagerSignatureDisplay(initialManager);
 }
 
-function setupCanvas(canvas, onSave) {
-  const ctx = canvas.getContext('2d');
-  
-  // Set resolution based on device pixel ratio
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width || 360;
-  canvas.height = rect.height || 120;
-  ctx.strokeStyle = '#0e1e38';
-  ctx.lineWidth = 2.5;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
+function updateAuditorSignatureDisplay(name) {
+  const card = document.getElementById('sigDisplayCardAuditor');
+  const scriptEl = document.getElementById('sigScriptAuditor');
+  const statusEl = document.getElementById('sigStatusAuditor');
+  const dateEl = document.getElementById('sigDateAuditor');
+  const inputSigAuditor = document.getElementById('inputSigAuditorName');
 
-  let drawing = false;
+  const trimmed = (name || '').trim();
+  if (inputSigAuditor && inputSigAuditor.value !== (name || '')) {
+    inputSigAuditor.value = name || '';
+  }
 
-  function getPos(e) {
-    const r = canvas.getBoundingClientRect();
-    if (e.touches && e.touches[0]) {
-      return {
-        x: e.touches[0].clientX - r.left,
-        y: e.touches[0].clientY - r.top
-      };
+  if (trimmed) {
+    if (scriptEl) {
+      scriptEl.textContent = trimmed;
+      scriptEl.classList.remove('placeholder');
     }
-    return {
-      x: e.clientX - r.left,
-      y: e.clientY - r.top
-    };
-  }
-
-  function start(e) {
-    drawing = true;
-    const p = getPos(e);
-    ctx.beginPath();
-    ctx.moveTo(p.x, p.y);
-    e.preventDefault();
-  }
-
-  function move(e) {
-    if (!drawing) return;
-    const p = getPos(e);
-    ctx.lineTo(p.x, p.y);
-    ctx.stroke();
-    e.preventDefault();
-  }
-
-  function stop() {
-    if (drawing) {
-      drawing = false;
-      onSave(canvas.toDataURL());
+    if (statusEl) {
+      statusEl.className = 'sig-status-badge signed';
+      statusEl.innerHTML = '<span class="status-dot green"></span> ✓ Digitally Signed & Attested';
     }
+    if (dateEl) {
+      const dateVal = appState.metadata.date || new Date().toISOString().split('T')[0];
+      dateEl.textContent = `Signed on: ${dateVal}`;
+    }
+    if (card) card.classList.add('is-signed');
+  } else {
+    if (scriptEl) {
+      scriptEl.textContent = 'Type your name above to sign';
+      scriptEl.classList.add('placeholder');
+    }
+    if (statusEl) {
+      statusEl.className = 'sig-status-badge pending';
+      statusEl.innerHTML = '<span class="status-dot amber"></span> Pending Signature';
+    }
+    if (dateEl) {
+      dateEl.textContent = 'Awaiting signature';
+    }
+    if (card) card.classList.remove('is-signed');
   }
-
-  canvas.addEventListener('mousedown', start);
-  canvas.addEventListener('mousemove', move);
-  window.addEventListener('mouseup', stop);
-
-  canvas.addEventListener('touchstart', start, { passive: false });
-  canvas.addEventListener('touchmove', move, { passive: false });
-  window.addEventListener('touchend', stop);
 }
 
-function clearCanvas(canvas) {
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+function updateManagerSignatureDisplay(name) {
+  const card = document.getElementById('sigDisplayCardManager');
+  const scriptEl = document.getElementById('sigScriptManager');
+  const statusEl = document.getElementById('sigStatusManager');
+  const dateEl = document.getElementById('sigDateManager');
+  const inputSigManager = document.getElementById('inputSigManagerName');
+
+  const trimmed = (name || '').trim();
+  if (inputSigManager && inputSigManager.value !== (name || '')) {
+    inputSigManager.value = name || '';
+  }
+
+  if (trimmed) {
+    if (scriptEl) {
+      scriptEl.textContent = trimmed;
+      scriptEl.classList.remove('placeholder');
+    }
+    if (statusEl) {
+      statusEl.className = 'sig-status-badge signed';
+      statusEl.innerHTML = '<span class="status-dot green"></span> ✓ Digitally Signed & Acknowledged';
+    }
+    if (dateEl) {
+      const dateVal = appState.metadata.date || new Date().toISOString().split('T')[0];
+      dateEl.textContent = `Signed on: ${dateVal}`;
+    }
+    if (card) card.classList.add('is-signed');
+  } else {
+    if (scriptEl) {
+      scriptEl.textContent = 'Type manager name above to sign';
+      scriptEl.classList.add('placeholder');
+    }
+    if (statusEl) {
+      statusEl.className = 'sig-status-badge pending';
+      statusEl.innerHTML = '<span class="status-dot amber"></span> Pending Signature';
+    }
+    if (dateEl) {
+      dateEl.textContent = 'Awaiting signature';
+    }
+    if (card) card.classList.remove('is-signed');
+  }
 }
 
 /**
@@ -1309,8 +1398,8 @@ function resetAuditForm() {
   appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
   appState.id = 'audit_' + Date.now();
 
-  if (auditorCanvas) clearCanvas(auditorCanvas);
-  if (managerCanvas) clearCanvas(managerCanvas);
+  updateAuditorSignatureDisplay('');
+  updateManagerSignatureDisplay('');
 
   renderAll();
   saveDraftToStorage();
