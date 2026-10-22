@@ -1949,15 +1949,24 @@ body {
     width: 100% !important;
     max-width: 100% !important;
     min-height: auto !important;
-    padding: 20mm 20mm !important;
+    padding: 16mm 20mm !important;
+  }
+
+  #docSheetPage1,
+  #docSheetPage2 {
     page-break-after: always !important;
     break-after: page !important;
   }
 
   .doc-sheet:last-child,
-  #docSheetPage2 {
+  #docSheetPage3 {
     page-break-after: auto !important;
     break-after: auto !important;
+  }
+
+  .doc-signoff-row {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   #docSheetAnnex,
