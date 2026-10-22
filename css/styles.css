@@ -1954,9 +1954,15 @@ body {
     break-after: page !important;
   }
 
-  .doc-sheet:last-child {
+  .doc-sheet:last-child,
+  #docSheetPage2 {
     page-break-after: auto !important;
     break-after: auto !important;
+  }
+
+  #docSheetAnnex,
+  .doc-sheet-annex {
+    display: none !important;
   }
 
   .doc-header-banner {
