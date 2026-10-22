@@ -379,7 +379,7 @@ function bindEventListeners() {
 
   const btnSaveAudit = document.getElementById('btnSaveAudit');
   if (btnSaveAudit) {
-    btnSaveAudit.addEventListener('click', saveAuditToHistory);
+    btnSaveAudit.addEventListener('click', saveAndRegisterAudit);
   }
 
   const btnHistoryToggle = document.getElementById('btnHistoryToggle');
@@ -1496,7 +1496,7 @@ function loadDraftFromStorage() {
   }
 }
 
-function saveAuditToHistory() {
+function saveAuditToHistory(silent = false) {
   try {
     const listJson = localStorage.getItem(STORAGE_HISTORY_KEY);
     const list = listJson ? JSON.parse(listJson) : [];
@@ -1526,9 +1526,13 @@ function saveAuditToHistory() {
     saveDraftToStorage();
 
     const stationName = record.metadata.stationName || 'Station';
-    showToast(`✓ Saved: ${stationName}! Click "+ New Audit" to start another station.`);
+    if (!silent) {
+      showToast(`✓ Saved: ${stationName}! Click "+ New Audit" to start another station.`);
+    }
   } catch (err) {
-    showToast('Failed to save audit: Local storage full');
+    if (!silent) {
+      showToast('Failed to save audit: Local storage full');
+    }
   }
 }
 
@@ -1664,56 +1668,117 @@ async function fetchNeonStatus() {
 }
 
 /**
- * Fetch all audits from Neon PostgreSQL
+ * Fetch all audits from Neon PostgreSQL with Local Storage Fallback & Merging
  */
 async function fetchAdminAudits() {
   const tbody = document.getElementById('adminRecordsTableBody');
-  if (tbody) {
+  if (tbody && neonAuditsList.length === 0) {
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 2rem; color: #94a3b8;">Syncing with Neon Serverless Database...</td></tr>`;
   }
 
+  // 1. Read locally saved audits from history
+  let localList = [];
+  try {
+    const rawLocal = localStorage.getItem(STORAGE_HISTORY_KEY);
+    localList = rawLocal ? JSON.parse(rawLocal) : [];
+  } catch (e) {
+    console.warn(e);
+  }
+
+  // 2. Fetch from Neon database
   try {
     const res = await fetch('/api/audits');
     const data = await res.json();
-    if (data.success) {
-      neonAuditsList = data.records || [];
+    if (data.success && Array.isArray(data.records)) {
+      const neonRecords = data.records;
+      const neonIds = new Set(neonRecords.map(r => r.id));
+
+      // Merge: any local records not yet present in Neon
+      const unSyncedLocal = localList.filter(l => !neonIds.has(l.id)).map(l => ({
+        id: l.id,
+        station_name: l.metadata?.stationName || 'Untitled Station',
+        canopy_id: l.metadata?.canopyId || 'N/A',
+        region: 'Addis Ababa',
+        audit_date: l.metadata?.date || l.savedAt?.split('T')[0] || new Date().toISOString().split('T')[0],
+        auditor_name: l.metadata?.auditorName || 'Auditor',
+        manager_name: l.metadata?.managerName || 'Manager',
+        compliance_score: parseInt(l.score) || 85,
+        status: (parseInt(l.score) || 85) >= 85 ? 'PASS' : (parseInt(l.score) || 85) >= 70 ? 'ACTION_REQUIRED' : 'CRITICAL',
+        dispensers_working: l.checklist?.dispensersWorking || 0,
+        dispensers_broken: l.checklist?.dispensersBroken || 0,
+        photo_count: (l.photos || []).length
+      }));
+
+      neonAuditsList = [...neonRecords, ...unSyncedLocal];
       renderAdminDashboard();
       const adminBadgeCount = document.getElementById('adminBadgeCount');
       if (adminBadgeCount) adminBadgeCount.textContent = neonAuditsList.length;
-    } else {
-      if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 2rem; color:#ef4444;">Error fetching from Neon: ${data.error}</td></tr>`;
+      return;
     }
   } catch (err) {
-    console.error('Fetch admin audits error:', err);
-    if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 2rem; color:#ef4444;">Network connection issue to Neon backend.</td></tr>`;
+    console.warn('Network issue fetching from Neon API, using local storage:', err);
+  }
+
+  // Fallback: render from local history so audits are always visible in Admin Panel
+  if (localList.length > 0) {
+    neonAuditsList = localList.map(l => ({
+      id: l.id,
+      station_name: l.metadata?.stationName || 'Untitled Station',
+      canopy_id: l.metadata?.canopyId || 'N/A',
+      region: 'Addis Ababa',
+      audit_date: l.metadata?.date || l.savedAt?.split('T')[0] || new Date().toISOString().split('T')[0],
+      auditor_name: l.metadata?.auditorName || 'Auditor',
+      manager_name: l.metadata?.managerName || 'Manager',
+      compliance_score: parseInt(l.score) || 85,
+      status: (parseInt(l.score) || 85) >= 85 ? 'PASS' : (parseInt(l.score) || 85) >= 70 ? 'ACTION_REQUIRED' : 'CRITICAL',
+      dispensers_working: l.checklist?.dispensersWorking || 0,
+      dispensers_broken: l.checklist?.dispensersBroken || 0,
+      photo_count: (l.photos || []).length
+    }));
+    renderAdminDashboard();
+    const adminBadgeCount = document.getElementById('adminBadgeCount');
+    if (adminBadgeCount) adminBadgeCount.textContent = neonAuditsList.length;
+  } else if (tbody) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 2rem; color: #94a3b8;">No registered audits found yet. Click "Save Audit" to register one.</td></tr>`;
   }
 }
 
 /**
- * Register current active audit to Neon Database
+ * Unified Save & Register: Saves locally and registers into Neon Database
  */
-async function registerAuditToNeon() {
-  const btn = document.getElementById('btnRegisterNeon');
-  if (btn) btn.disabled = true;
+async function saveAndRegisterAudit() {
+  const btnSave = document.getElementById('btnSaveAudit');
+  const btnRegister = document.getElementById('btnRegisterNeon');
+  if (btnSave) btnSave.disabled = true;
+  if (btnRegister) btnRegister.disabled = true;
+
+  // 1. Ensure audit has a valid unique ID
+  if (!appState.id) {
+    appState.id = 'audit_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+  }
+
+  // 2. Immediately save local backup copy
+  saveAuditToHistory(true);
+
+  const stationName = appState.metadata.stationName || 'Station';
+  const scoreText = document.getElementById('progressScoreText')?.textContent || '85%';
+  const scoreVal = parseInt(scoreText.replace('%', '')) || 85;
+
+  const payload = {
+    id: appState.id,
+    metadata: appState.metadata,
+    checklist: {
+      ...appState.checklist,
+      _remarks: appState.remarks
+    },
+    remarks: appState.remarks,
+    correctiveActions: appState.correctiveActions,
+    signatures: appState.signatures,
+    photos: appState.photos,
+    complianceScore: scoreVal
+  };
 
   try {
-    const scoreText = document.getElementById('progressScoreText')?.textContent || '85%';
-    const scoreVal = parseInt(scoreText.replace('%', '')) || 85;
-
-    const payload = {
-      id: appState.id || ('audit_' + Date.now()),
-      metadata: appState.metadata,
-      checklist: {
-        ...appState.checklist,
-        _remarks: appState.remarks
-      },
-      remarks: appState.remarks,
-      correctiveActions: appState.correctiveActions,
-      signatures: appState.signatures,
-      photos: appState.photos,
-      complianceScore: scoreVal
-    };
-
     const res = await fetch('/api/audits', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1724,18 +1789,26 @@ async function registerAuditToNeon() {
     if (data.success) {
       lastSavedAuditId = payload.id;
       saveDraftToStorage();
-      showToast(`✓ Registered in Neon: ${appState.metadata.stationName || 'Station'}! Click "+ New Audit" for next.`);
-      fetchNeonStatus();
-      fetchAdminAudits();
+      showToast(`✓ Saved to Admin Panel & Neon: ${stationName}!`);
+      await fetchNeonStatus();
+      await fetchAdminAudits();
     } else {
-      showToast(`Neon DB Error: ${data.error || 'Failed to save'}`);
+      lastSavedAuditId = payload.id;
+      showToast(`✓ Saved locally to Admin Panel (DB notice: ${data.error || 'Saved'})`);
+      await fetchAdminAudits();
     }
   } catch (err) {
-    showToast(`Error registering: ${err.message}`);
+    lastSavedAuditId = payload.id;
+    showToast(`✓ Saved to Admin Panel: ${stationName} (Local mode)`);
+    await fetchAdminAudits();
   } finally {
-    if (btn) btn.disabled = false;
+    if (btnSave) btnSave.disabled = false;
+    if (btnRegister) btnRegister.disabled = false;
   }
 }
+
+// Backward-compatible alias
+const registerAuditToNeon = saveAndRegisterAudit;
 
 /**
  * Render the Admin Dashboard with Live Neon Records & KPI Metrics
@@ -1912,22 +1985,68 @@ window.inspectAuditDetails = async function(auditId) {
   const meta = document.getElementById('detailModalMeta');
   if (!modal || !content) return;
 
-  content.innerHTML = `<div style="text-align: center; padding: 2rem;">Loading full record from Neon database...</div>`;
+  content.innerHTML = `<div style="text-align: center; padding: 2rem;">Loading full record...</div>`;
   modal.classList.add('active');
 
+  let rec = null;
   try {
     const res = await fetch(`/api/audits/${auditId}`);
     const data = await res.json();
-    if (!data.success || !data.record) {
-      content.innerHTML = `<div style="color: #ef4444; padding: 1rem;">Failed to load record details: ${data.error}</div>`;
-      return;
+    if (data.success && data.record) {
+      rec = data.record;
     }
+  } catch (err) {
+    console.warn('API fetch failed, checking local storage:', err);
+  }
 
-    const rec = data.record;
+  // Fallback to local storage if API didn't return the record
+  if (!rec) {
+    try {
+      const rawLocal = localStorage.getItem(STORAGE_HISTORY_KEY);
+      const localList = rawLocal ? JSON.parse(rawLocal) : [];
+      const match = localList.find(item => item.id === auditId);
+      if (match) {
+        rec = {
+          id: match.id,
+          station_name: match.metadata?.stationName || 'Untitled Station',
+          canopy_id: match.metadata?.canopyId || 'N/A',
+          region: 'Addis Ababa',
+          audit_date: match.metadata?.date || match.savedAt?.split('T')[0] || new Date().toISOString().split('T')[0],
+          auditor_name: match.metadata?.auditorName || 'Auditor',
+          manager_name: match.metadata?.managerName || 'Manager',
+          compliance_score: parseInt(match.score) || 85,
+          status: (parseInt(match.score) || 85) >= 85 ? 'PASS' : (parseInt(match.score) || 85) >= 70 ? 'ACTION_REQUIRED' : 'CRITICAL',
+          dispensers_working: match.checklist?.dispensersWorking || 0,
+          dispensers_broken: match.checklist?.dispensersBroken || 0,
+          checklist_data: match.checklist || {},
+          corrective_actions: match.correctiveActions || [],
+          signatures: match.signatures || {},
+          photos: (match.photos || []).map(p => ({
+            id: p.id,
+            item_id: p.itemId,
+            item_title: p.itemTitle,
+            photo_url: p.dataUrl,
+            caption: p.caption,
+            captured_at: p.timestamp
+          })),
+          created_at: match.savedAt ? 'Saved Locally (' + match.savedAt.split('T')[0] + ')' : 'Local Device'
+        };
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+  }
+
+  if (!rec) {
+    content.innerHTML = `<div style="color: #ef4444; padding: 1rem;">Failed to load record details. Record not found.</div>`;
+    return;
+  }
+
+  try {
     currentDetailedAudit = rec;
 
     title.innerHTML = `<span>🏢</span> ${rec.station_name} (${rec.canopy_id})`;
-    meta.textContent = `Audit Date: ${rec.audit_date} | Registered in Neon DB: ${rec.created_at || 'Cloud'}`;
+    meta.textContent = `Audit Date: ${rec.audit_date} | Source: ${rec.created_at || 'Neon Database'}`;
 
     const checklist = typeof rec.checklist_data === 'string' ? JSON.parse(rec.checklist_data) : (rec.checklist_data || {});
     const itemRemarks = checklist._remarks || checklist.remarks || rec.remarks || {};
@@ -2057,58 +2176,98 @@ function closeDetailModal() {
  * Load a Neon record into the interactive form
  */
 window.loadAuditIntoForm = async function(auditId) {
+  let rec = null;
   try {
     const res = await fetch(`/api/audits/${auditId}`);
     const data = await res.json();
     if (data.success && data.record) {
-      const rec = data.record;
-      const checklist = typeof rec.checklist_data === 'string' ? JSON.parse(rec.checklist_data) : (rec.checklist_data || {});
-      const remarks = checklist._remarks || checklist.remarks || rec.remarks || {};
-      const corrective = typeof rec.corrective_actions === 'string' ? JSON.parse(rec.corrective_actions) : (rec.corrective_actions || []);
-      const signatures = typeof rec.signatures === 'string' ? JSON.parse(rec.signatures) : (rec.signatures || {});
-      const photos = (rec.photos || []).map(p => ({
-        id: p.id,
-        itemId: p.item_id,
-        itemTitle: p.item_title,
-        dataUrl: p.photo_url,
-        caption: p.caption,
-        timestamp: p.captured_at
-      }));
+      rec = data.record;
+    }
+  } catch (err) {
+    console.warn('API fetch failed, checking local storage:', err);
+  }
 
-      appState = {
-        id: rec.id,
-        metadata: {
-          stationName: rec.station_name,
-          canopyId: rec.canopy_id,
-          date: rec.audit_date,
-          auditorName: rec.auditor_name,
-          managerName: rec.manager_name
-        },
-        checklist: {
-          ...checklist,
-          dispensersWorking: rec.dispensers_working ?? 0,
-          dispensersBroken: rec.dispensers_broken ?? 0,
-          keroseneDispensersWorking: checklist.keroseneDispensersWorking ?? 0,
-          keroseneDispensersBroken: checklist.keroseneDispensersBroken ?? 0
-        },
-        remarks: Object.assign({
+  // Fallback to local storage if API didn't return record
+  if (!rec) {
+    try {
+      const rawLocal = localStorage.getItem(STORAGE_HISTORY_KEY);
+      const localList = rawLocal ? JSON.parse(rawLocal) : [];
+      const match = localList.find(item => item.id === auditId);
+      if (match) {
+        appState = JSON.parse(JSON.stringify(match));
+        appState.id = match.id;
+        appState.remarks = Object.assign({
           canopyLogo: '', lighting: '', pylonSign: '',
           dispenserOperational: '', nozzlesBreakaways: '',
           lubricantShelf: '', lubricantStock: '',
           carWash: '', generator: '',
           fireExtinguishers: '', staffUniform: ''
-        }, remarks),
-        correctiveActions: corrective,
-        signatures: signatures,
-        photos: photos
-      };
+        }, match.remarks || match.checklist?._remarks || {});
 
-      lastSavedAuditId = rec.id;
-      renderAll();
-      saveDraftToStorage();
-      switchView('interactive');
-      showToast(`Loaded ${rec.station_name} into form`);
+        lastSavedAuditId = match.id;
+        renderAll();
+        saveDraftToStorage();
+        switchView('interactive');
+        showToast(`Loaded ${match.metadata?.stationName || 'Station'} into form`);
+        return;
+      }
+    } catch (e) {
+      console.warn(e);
     }
+  }
+
+  if (!rec) {
+    showToast(`Error: Audit record not found`);
+    return;
+  }
+
+  try {
+    const checklist = typeof rec.checklist_data === 'string' ? JSON.parse(rec.checklist_data) : (rec.checklist_data || {});
+    const remarks = checklist._remarks || checklist.remarks || rec.remarks || {};
+    const corrective = typeof rec.corrective_actions === 'string' ? JSON.parse(rec.corrective_actions) : (rec.corrective_actions || []);
+    const signatures = typeof rec.signatures === 'string' ? JSON.parse(rec.signatures) : (rec.signatures || {});
+    const photos = (rec.photos || []).map(p => ({
+      id: p.id,
+      itemId: p.item_id,
+      itemTitle: p.item_title,
+      dataUrl: p.photo_url,
+      caption: p.caption,
+      timestamp: p.captured_at
+    }));
+
+    appState = {
+      id: rec.id,
+      metadata: {
+        stationName: rec.station_name,
+        canopyId: rec.canopy_id,
+        date: rec.audit_date,
+        auditorName: rec.auditor_name,
+        managerName: rec.manager_name
+      },
+      checklist: {
+        ...checklist,
+        dispensersWorking: rec.dispensers_working ?? 0,
+        dispensersBroken: rec.dispensers_broken ?? 0,
+        keroseneDispensersWorking: checklist.keroseneDispensersWorking ?? 0,
+        keroseneDispensersBroken: checklist.keroseneDispensersBroken ?? 0
+      },
+      remarks: Object.assign({
+        canopyLogo: '', lighting: '', pylonSign: '',
+        dispenserOperational: '', nozzlesBreakaways: '',
+        lubricantShelf: '', lubricantStock: '',
+        carWash: '', generator: '',
+        fireExtinguishers: '', staffUniform: ''
+      }, remarks),
+      correctiveActions: corrective,
+      signatures: signatures,
+      photos: photos
+    };
+
+    lastSavedAuditId = rec.id;
+    renderAll();
+    saveDraftToStorage();
+    switchView('interactive');
+    showToast(`Loaded ${rec.station_name} into form`);
   } catch (err) {
     showToast(`Error loading audit: ${err.message}`);
   }
@@ -2126,26 +2285,40 @@ window.loadAuditIntoPdf = async function(auditId) {
 };
 
 /**
- * Delete an audit from the Neon PostgreSQL database
+ * Delete an audit from the Neon PostgreSQL database & Local Storage
  */
 window.deleteAuditFromNeon = async function(auditId, stationName) {
-  if (!confirm(`Are you sure you want to permanently delete the audit record for "${stationName || auditId}" from Neon Database?`)) {
+  if (!confirm(`Are you sure you want to permanently delete the audit record for "${stationName || auditId}"?`)) {
     return;
   }
 
+  // 1. Delete from local storage history
+  try {
+    const rawLocal = localStorage.getItem(STORAGE_HISTORY_KEY);
+    if (rawLocal) {
+      const localList = JSON.parse(rawLocal);
+      const filtered = localList.filter(item => item.id !== auditId);
+      localStorage.setItem(STORAGE_HISTORY_KEY, JSON.stringify(filtered));
+    }
+  } catch (e) {
+    console.warn(e);
+  }
+
+  // 2. Delete from Neon DB if online
   try {
     const res = await fetch(`/api/audits/${auditId}`, { method: 'DELETE' });
     const data = await res.json();
     if (data.success) {
-      showToast(`Deleted from Neon DB`);
-      fetchNeonStatus();
-      fetchAdminAudits();
+      showToast(`Deleted record from database & admin view`);
     } else {
-      showToast(`Delete failed: ${data.error}`);
+      showToast(`Removed from Admin View (DB notice: ${data.error})`);
     }
   } catch (err) {
-    showToast(`Error deleting: ${err.message}`);
+    showToast(`Removed record from local storage`);
   }
+
+  await fetchNeonStatus();
+  await fetchAdminAudits();
 };
 
 /**
