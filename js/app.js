@@ -362,6 +362,11 @@ function bindEventListeners() {
   }
 
   // Action Buttons
+   const btnNewAudit = document.getElementById('btnNewAudit');
+  if (btnNewAudit) {
+    btnNewAudit.addEventListener('click', () => window.startNewAudit());
+  }
+
   const btnPrintPdf = document.getElementById('btnPrintPdf');
   if (btnPrintPdf) {
     btnPrintPdf.addEventListener('click', handlePrintPdf);
@@ -369,7 +374,7 @@ function bindEventListeners() {
 
   const btnResetAudit = document.getElementById('btnResetAudit');
   if (btnResetAudit) {
-    btnResetAudit.addEventListener('click', resetAuditForm);
+    btnResetAudit.addEventListener('click', () => window.startNewAudit());
   }
 
   const btnSaveAudit = document.getElementById('btnSaveAudit');
@@ -1390,20 +1395,62 @@ function handlePrintPdf() {
 }
 
 /**
- * Reset Audit Form
+ * Track last successfully saved audit ID to prevent prompt annoyances
  */
-function resetAuditForm() {
-  if (!confirm('Are you sure you want to reset this audit form? Unsaved changes will be cleared.')) return;
+let lastSavedAuditId = null;
 
+function hasUnsavedData() {
+  if (!appState) return false;
+  // If this audit was saved and has not been cleared, it's not unsaved
+  if (lastSavedAuditId && lastSavedAuditId === appState.id) return false;
+
+  const hasMeta = Boolean((appState.metadata?.stationName || '').trim() || (appState.metadata?.canopyId || '').trim());
+  const hasChecklist = Object.values(appState.checklist || {}).some(v => v !== null && v !== 0 && v !== '');
+  const hasActions = Boolean((appState.correctiveActions && appState.correctiveActions.length > 0) || (appState.photos && appState.photos.length > 0));
+
+  return hasMeta || hasChecklist || hasActions;
+}
+
+/**
+ * Start a brand new, clean audit for another station
+ */
+window.startNewAudit = function(force = false) {
+  if (!force && hasUnsavedData()) {
+    if (!confirm('Start a new station audit? Unsaved changes in the current form will be lost.')) {
+      return;
+    }
+  }
+
+  // 1. Generate guaranteed unique ID for the new station inspection
   appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
-  appState.id = 'audit_' + Date.now();
+  appState.id = 'audit_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+  appState.metadata.date = new Date().toISOString().split('T')[0];
+  lastSavedAuditId = null;
 
+  // 2. Clear current draft from local storage so it starts completely clean
+  try {
+    localStorage.removeItem(STORAGE_DRAFT_KEY);
+  } catch (err) {
+    console.warn(err);
+  }
+
+  // 3. Clear signature displays
   updateAuditorSignatureDisplay('');
   updateManagerSignatureDisplay('');
 
+  // 4. Render all views and form inputs
   renderAll();
-  saveDraftToStorage();
-  showToast('Form reset to blank audit');
+  switchView('interactive');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  showToast('✓ Started new blank station audit');
+};
+
+/**
+ * Reset Audit Form (calls startNewAudit)
+ */
+function resetAuditForm() {
+  window.startNewAudit(false);
 }
 
 /**
@@ -1433,6 +1480,9 @@ function loadDraftFromStorage() {
           return;
         }
         appState = parsed;
+        if (!appState.id) {
+          appState.id = 'audit_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+        }
         if (!appState.checklist) appState.checklist = {};
         if (appState.checklist.keroseneDispensersWorking === undefined) appState.checklist.keroseneDispensersWorking = 0;
         if (appState.checklist.keroseneDispensersBroken === undefined) appState.checklist.keroseneDispensersBroken = 0;
@@ -1450,8 +1500,13 @@ function saveAuditToHistory() {
   try {
     const listJson = localStorage.getItem(STORAGE_HISTORY_KEY);
     const list = listJson ? JSON.parse(listJson) : [];
-    
-    // Add timestamp
+
+    // Ensure audit has an ID
+    if (!appState.id) {
+      appState.id = 'audit_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+    }
+
+    // Add timestamp & score
     const record = {
       ...appState,
       savedAt: new Date().toISOString(),
@@ -1467,7 +1522,11 @@ function saveAuditToHistory() {
     }
 
     localStorage.setItem(STORAGE_HISTORY_KEY, JSON.stringify(list));
-    showToast(`Audit saved for ${record.metadata.stationName || 'Station'}`);
+    lastSavedAuditId = record.id;
+    saveDraftToStorage();
+
+    const stationName = record.metadata.stationName || 'Station';
+    showToast(`✓ Saved: ${stationName}! Click "+ New Audit" to start another station.`);
   } catch (err) {
     showToast('Failed to save audit: Local storage full');
   }
@@ -1482,12 +1541,27 @@ function openHistoryDrawer() {
   const historyJson = localStorage.getItem(STORAGE_HISTORY_KEY);
   const list = historyJson ? JSON.parse(historyJson) : [];
 
-  listEl.innerHTML = '';
+  listEl.innerHTML = `
+    <div style="margin-bottom: 0.85rem;">
+      <button type="button" class="btn btn-primary btn-sm" id="btnDrawerNewAudit" style="width: 100%; justify-content: center; gap: 6px;">
+        <span>➕ Start New Blank Audit</span>
+      </button>
+    </div>
+  `;
+
+  const btnDrawerNewAudit = document.getElementById('btnDrawerNewAudit');
+  if (btnDrawerNewAudit) {
+    btnDrawerNewAudit.onclick = () => {
+      closeHistoryDrawer();
+      window.startNewAudit();
+    };
+  }
+
   if (list.length === 0) {
-    listEl.innerHTML = `
+    listEl.innerHTML += `
       <div style="text-align: center; color: #94a3b8; padding: 2rem 1rem;">
         <p>No saved audits found yet.</p>
-        <p style="font-size: 0.75rem; margin-top: 0.5rem;">Click "Save Audit" to store completed station inspection records.</p>
+        <p style="font-size: 0.75rem; margin-top: 0.5rem;">Click "Save" or "Register to Neon" to store completed station inspection records.</p>
       </div>
     `;
   } else {
@@ -1507,6 +1581,7 @@ function openHistoryDrawer() {
       card.addEventListener('click', () => {
         if (confirm(`Load audit for ${item.metadata.stationName}? Current unsaved edits will be replaced.`)) {
           appState = item;
+          lastSavedAuditId = item.id;
           if (!appState.checklist) appState.checklist = {};
           if (appState.checklist.keroseneDispensersWorking === undefined) appState.checklist.keroseneDispensersWorking = 0;
           if (appState.checklist.keroseneDispensersBroken === undefined) appState.checklist.keroseneDispensersBroken = 0;
@@ -1647,7 +1722,9 @@ async function registerAuditToNeon() {
 
     const data = await res.json();
     if (data.success) {
-      showToast(`Registered in Neon DB: ${appState.metadata.stationName || 'Station'}`);
+      lastSavedAuditId = payload.id;
+      saveDraftToStorage();
+      showToast(`✓ Registered in Neon: ${appState.metadata.stationName || 'Station'}! Click "+ New Audit" for next.`);
       fetchNeonStatus();
       fetchAdminAudits();
     } else {
@@ -2026,6 +2103,7 @@ window.loadAuditIntoForm = async function(auditId) {
         photos: photos
       };
 
+      lastSavedAuditId = rec.id;
       renderAll();
       saveDraftToStorage();
       switchView('interactive');

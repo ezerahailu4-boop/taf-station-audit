@@ -72,16 +72,20 @@
           </button>
         </div>
 
-        <button type="button" class="btn btn-primary btn-sm" id="btnRegisterNeon" title="Save and register this audit into the Neon PostgreSQL database">
+        <button type="button" class="btn btn-primary btn-sm" id="btnNewAudit" title="Start a fresh blank audit for another station">
+          <span>➕ New Audit</span>
+        </button>
+
+        <button type="button" class="btn btn-secondary btn-sm" id="btnSaveAudit" title="Save current audit to local database">
+          <span>💾 Save</span>
+        </button>
+
+        <button type="button" class="btn btn-secondary btn-sm" id="btnRegisterNeon" title="Save and register this audit into the Neon PostgreSQL database">
           <span>🚀 Register to Neon</span>
         </button>
 
         <button type="button" class="btn btn-secondary btn-sm" id="btnPrintPdf" title="Print or save as official PDF">
           <span>🖨️ Print PDF</span>
-        </button>
-
-        <button type="button" class="btn btn-secondary btn-sm" id="btnSaveAudit" title="Save current audit to local database">
-          <span>💾 Save</span>
         </button>
 
         <button type="button" class="btn btn-secondary btn-sm" id="btnHistoryToggle" title="View previously saved audits">
@@ -119,8 +123,8 @@
         </div>
 
         <div class="toolbar-buttons">
-          <button type="button" class="btn btn-secondary btn-sm" id="btnResetAudit">
-            <span>🔄 Clear Form</span>
+          <button type="button" class="btn btn-secondary btn-sm" id="btnResetAudit" title="Clear current form and start fresh audit">
+            <span>➕ New Blank Audit</span>
           </button>
         </div>
       </div>
@@ -1009,7 +1013,7 @@
           <button type="button" class="btn btn-secondary btn-sm" id="btnAdminExportJson">
             <span>📦 Export JSON</span>
           </button>
-          <button type="button" class="btn btn-primary btn-sm" onclick="switchView('interactive')">
+          <button type="button" class="btn btn-primary btn-sm" onclick="startNewAudit()">
             <span>➕ New Station Audit</span>
           </button>
         </div>
