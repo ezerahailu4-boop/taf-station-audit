@@ -1949,24 +1949,97 @@ body {
     width: 100% !important;
     max-width: 100% !important;
     min-height: auto !important;
-    padding: 16mm 20mm !important;
+    padding: 10mm 15mm 8mm 15mm !important;
   }
 
-  #docSheetPage1,
-  #docSheetPage2 {
+  #docSheetPage1 {
     page-break-after: always !important;
     break-after: page !important;
   }
 
-  .doc-sheet:last-child,
-  #docSheetPage3 {
+  #docSheetPage2 {
     page-break-after: auto !important;
     break-after: auto !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Compact print spacing so Page 1 and Page 2 fit perfectly without spillover */
+  .doc-section {
+    margin-bottom: 8px !important;
+  }
+
+  .doc-section-header {
+    margin-bottom: 3px !important;
+  }
+
+  .doc-orange-bar {
+    height: 14px !important;
+  }
+
+  .doc-section-title {
+    font-size: 11.5px !important;
+  }
+
+  .doc-row {
+    padding: 6px 12px !important;
+  }
+
+  .doc-item-title {
+    font-size: 11.5px !important;
+    margin-bottom: 1px !important;
+  }
+
+  .doc-item-desc {
+    font-size: 9.5px !important;
+    line-height: 1.25 !important;
+  }
+
+  .doc-options-display {
+    font-size: 11px !important;
+    gap: 12px !important;
+  }
+
+  .doc-notes-card {
+    padding: 8px 12px !important;
+    min-height: 48px !important;
+  }
+
+  .doc-notes-instruction {
+    font-size: 9.5px !important;
+    margin-bottom: 5px !important;
+  }
+
+  .doc-note-line {
+    margin-bottom: 4px !important;
+    font-size: 10.5px !important;
   }
 
   .doc-signoff-row {
+    margin-top: 8px !important;
+    padding-top: 6px !important;
+    gap: 18px !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+  }
+
+  .doc-sig-preview {
+    height: 38px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .doc-script-signature {
+    font-size: 22px !important;
+  }
+
+  .doc-meta-label {
+    font-size: 9px !important;
+  }
+
+  .doc-footer {
+    margin-top: auto !important;
+    padding-top: 6px !important;
+    font-size: 9px !important;
   }
 
   #docSheetAnnex,
